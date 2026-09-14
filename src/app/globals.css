@@ -1,0 +1,81 @@
+/* src/app/globals.css */
+@import "tailwindcss";
+
+/* =========================================================
+	globals.css — Block 1/4: Base / tokens / reset / container
+========================================================= */
+
+:root {
+	--app-bg: #0b1220;
+	--app-surface: rgba(255, 255, 255, 0.04);
+	--app-surface-2: rgba(255, 255, 255, 0.06);
+	--app-border: rgba(226, 232, 240, 0.16);
+
+	--app-text: #e2e8f0;
+	--app-muted: #94a3b8;
+
+	--space-2: 0.5rem;
+	--space-4: 1rem;
+	--space-6: 1.5rem;
+
+	--container-max: 72rem;
+	--container-gutter: 1rem;
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	background: var(--app-bg);
+	color: var(--app-text);
+}
+
+body {
+	margin: 0;
+	min-height: 100dvh;
+	font-family:
+		ui-sans-serif,
+		system-ui,
+		-apple-system,
+		"Segoe UI",
+		Roboto,
+		Helvetica,
+		Arial,
+		"Apple Color Emoji",
+		"Segoe UI Emoji";
+	line-height: 1.5;
+}
+
+h1,
+h2,
+h3,
+p {
+	margin: 0;
+}
+
+.muted {
+	color: var(--app-muted);
+}
+
+.app-container {
+	width: 100%;
+	max-width: var(--container-max);
+	margin-inline: auto;
+	padding-inline: var(--container-gutter);
+}
+
+@media (min-width: 640px) {
+	:root {
+		--container-gutter: 1.5rem;
+	}
+}
+
+@media (min-width: 1024px) {
+	:root {
+		--container-gutter: 2rem;
+	}
+}
