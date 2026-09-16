@@ -1,5 +1,6 @@
 // src/app/(demo)/demo-contract/page.tsx
 import Link from 'next/link'
+import Container from '@/app/components/layout/Container'
 import type {HelloPayload} from '@/demo/contracts'
 import HelloClient from './HelloClient'
 
@@ -8,18 +9,30 @@ export default function DemoContractPage() {
 	// В Client Component передаётся только сериализуемый объект строго по контракту.
 	const payload: HelloPayload = {
 		appName: 'Workbench Notes',
-		renderedAt: new Date().toISOString(),
+		renderedAt: new Date().toLocaleString(),
 		mode: 'server-to-client',
+
+		initialNotes: [
+			{id: 'n1', title: 'Первая заметка', status: 'draft', tags: ['intro']},
+			{
+				id: 'n2',
+				title: 'TypeScript = ограничения',
+				status: 'published',
+				tags: ['ts', 'contracts'],
+			},
+			{
+				id: 'n3',
+				title: 'Граница server/client',
+				status: 'published',
+				tags: ['next', 'app-router'],
+			},
+		],
 	}
 
 	return (
-		<div className="app-container py-10">
+		<Container className="py-10">
 			<div className="flex items-center justify-between gap-4">
 				<h1 className="text-2xl font-semibold">Server → Client контракт</h1>
-
-				<Link className="text-sm underline underline-offset-4" href="/demo">
-					Назад в демо
-				</Link>
 			</div>
 
 			<p className="mt-2 text-sm text-slate-400">
@@ -30,6 +43,12 @@ export default function DemoContractPage() {
 			<div className="mt-8">
 				<HelloClient payload={payload} />
 			</div>
-		</div>
+
+			<div className="mt-8 flex flex-wrap gap-2">
+				<Link href="/demo" className="app-btn app-btn-ghost">
+					Назад в демо
+				</Link>
+			</div>
+		</Container>
 	)
 }

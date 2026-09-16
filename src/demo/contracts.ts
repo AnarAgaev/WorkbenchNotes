@@ -5,6 +5,10 @@
 
 export type HelloPayload = {
 	appName: string
-	renderedAt: string // ISO-строка вместо Date: безопасно проходит через границу
-	mode: 'server-to-client' // литеральный маркер: фиксирует допустимое значение поля
+	renderedAt: string
+	mode: 'server-to-client'
+
+	// Сервер передаёт стартовые данные.
+	// Сервер и клиент согласованы типом, а не догадками.
+	initialNotes: DemoNote[]
 }
