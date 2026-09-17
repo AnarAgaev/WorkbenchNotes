@@ -33,6 +33,12 @@ export default function HelloClient({payload}: Props) {
 		data: payload.initialNotes,
 	})
 
+	// Фильтр статуса: union ограничивает допустимые значения.
+	// "all" добавлен как отдельный вариант — не смешиваем с DemoNoteStatus.
+	const [statusFilter, setStatusFilter] = useState<DemoNoteStatus | 'all'>(
+		'all',
+	)
+
 	const renderedLabel = useMemo(() => {
 		return `${payload.appName} / ${payload.mode}`
 	}, [payload.appName, payload.mode])
@@ -64,17 +70,74 @@ export default function HelloClient({payload}: Props) {
 			case 'error':
 				return <p className="text-sm text-red-400">{state.message}</p>
 
-			case 'ready':
+			case 'ready': {
+				const filtered =
+					statusFilter === 'all'
+						? state.data
+						: state.data.filter((n) => n.status === statusFilter)
+
 				return (
-					<ul className="space-y-1 text-sm">
-						{state.data.map((n) => (
-							<li key={n.id}>
-								<span className="font-medium">{n.title}</span>{' '}
-								<span className="text-slate-500">({n.id})</span>
-							</li>
-						))}
-					</ul>
+					<div className="space-y-3">
+						<div className="flex flex-wrap items-center gap-2">
+							<span className="text-sm text-slate-300">Фильтр:</span>
+
+							<button
+								type="button"
+								className={
+									statusFilter === 'all' ? 'app-btn' : 'app-btn app-btn-ghost'
+								}
+								onClick={() => setStatusFilter('all')}
+							>
+								all
+							</button>
+
+							{(['draft', 'published', 'archived'] as const).map((status) => (
+								<button
+									key={status}
+									type="button"
+									className={
+										statusFilter === status
+											? 'app-btn'
+											: 'app-btn app-btn-ghost'
+									}
+									onClick={() => setStatusFilter(status)}
+								>
+									{status}
+								</button>
+							))}
+						</div>
+
+						<ul className="grid gap-3">
+							{filtered.map((note) => (
+								<li key={note.id} className="app-card">
+									<div className="flex flex-wrap items-center gap-2">
+										<span className="font-medium text-slate-100">
+											{note.title}
+										</span>
+										<span className="rounded-lg border border-slate-700 bg-slate-900/40 px-2 py-0.5 text-xs text-slate-200">
+											{note.status}
+										</span>
+										<span className="text-xs text-slate-400">
+											id: {note.id}
+										</span>
+									</div>
+
+									<div className="mt-2 flex flex-wrap gap-1.5">
+										{note.tags.map((tag) => (
+											<span
+												key={tag}
+												className="rounded-lg border border-slate-700 bg-slate-900/40 px-2 py-0.5 text-xs text-slate-200"
+											>
+												#{tag}
+											</span>
+										))}
+									</div>
+								</li>
+							))}
+						</ul>
+					</div>
 				)
+			}
 
 			default:
 				// Новое состояние без обработки → ошибка компиляции, а не молчаливый баг.

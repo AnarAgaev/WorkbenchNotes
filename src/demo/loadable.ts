@@ -11,5 +11,5 @@ export type Loadable<T> =
 // Помогает делать switch по состояниям исчерпывающим.
 // Если позже добавится новое состояние, TypeScript подсветит место, где оно не обработано.
 export function assertNever(x: never): never {
-	throw new Error('Unexpected object: ' + JSON.stringify(x))
+	throw new Error(`Unexpected object: ${JSON.stringify(x)}`)
 }

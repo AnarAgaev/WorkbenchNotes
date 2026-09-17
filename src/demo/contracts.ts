@@ -5,7 +5,7 @@
 
 export type HelloPayload = {
 	appName: string
-	renderedAt: string
+	renderedAt: string // as new Date().toISOString()
 	mode: 'server-to-client'
 
 	// Сервер передаёт стартовые данные.
