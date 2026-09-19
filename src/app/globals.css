@@ -79,3 +79,150 @@ p {
 		--container-gutter: 2rem;
 	}
 }
+
+/* =========================================================
+   globals.css — Block 2/4: Cards / Buttons / Inputs / Sections
+========================================================= */
+
+/* main padding / “no воздух под футером” */
+.app-main {
+	flex: 1;
+	min-height: 0;
+	padding-bottom: 0;
+}
+
+/* sections */
+.app-section {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+}
+
+.app-section__head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: var(--space-4);
+}
+
+.app-section.pb-0 {
+	padding-bottom: 0 !important;
+}
+
+/* cards */
+.app-card {
+	background: var(--app-surface);
+	border: 1px solid var(--app-border);
+	border-radius: 14px;
+	padding: var(--space-4);
+	box-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+}
+
+.app-card--soft {
+	background: var(--app-surface-2);
+}
+
+.app-row {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: var(--space-4);
+}
+
+/* links */
+a {
+	color: inherit;
+}
+
+.app-link {
+	color: #60a5fa;
+	text-decoration: none;
+}
+.app-link:hover {
+	text-decoration: underline;
+}
+
+/* buttons */
+.app-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+
+	border: 1px solid var(--app-border);
+	border-radius: 10px;
+	padding: 0.55rem 0.8rem;
+
+	background: rgba(255, 255, 255, 0.06);
+	color: var(--app-text);
+	text-decoration: none;
+
+	font-size: 0.875rem;
+	font-weight: 700;
+	line-height: 1;
+
+	cursor: pointer;
+	user-select: none;
+
+	transition:
+		background 120ms ease,
+		transform 80ms ease,
+		border-color 120ms ease;
+}
+
+.app-btn:hover {
+	background: rgba(255, 255, 255, 0.1);
+}
+
+.app-btn:active {
+	transform: translateY(1px);
+}
+
+.app-btn:focus-visible,
+.app-link:focus-visible,
+.app-input:focus-visible {
+	outline: 2px solid rgba(147, 197, 253, 0.7);
+	outline-offset: 2px;
+}
+
+.app-btn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+	transform: none;
+}
+
+.app-btn-primary {
+	background: #ffffff;
+	border-color: #ffffff;
+	color: #0f172a;
+}
+.app-btn-primary:hover {
+	background: #e2e8f0;
+	border-color: #e2e8f0;
+}
+
+.app-btn-ghost {
+	background: transparent;
+	border-color: var(--app-border);
+}
+.app-btn-ghost:hover {
+	background: rgba(255, 255, 255, 0.06);
+}
+
+/* inputs */
+.app-input {
+	width: 100%;
+	border: 1px solid var(--app-border);
+	border-radius: 10px;
+	padding: 0.55rem 0.75rem;
+
+	background: rgba(0, 0, 0, 0.25);
+	color: var(--app-text);
+
+	font-size: 0.875rem;
+}
+
+.app-input::placeholder {
+	color: rgba(148, 163, 184, 0.9);
+}
