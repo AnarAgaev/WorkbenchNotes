@@ -97,8 +97,33 @@ export default async function DemoNotesLabPage({searchParams}: PageProps) {
 
 							<div className="mt-2 text-sm text-slate-300">
 								<div>status: {selectedNote.status}</div>
-								<div>
+
+								<div className="mt-1">
+									priority:{' '}
+									<code className="font-mono">{selectedNote.priority}</code>
+								</div>
+
+								<div className="mt-1">
 									id: <code className="font-mono">{selectedNote.id}</code>
+								</div>
+
+								<div className="mt-1">
+									createdAt:{' '}
+									<code className="font-mono">{selectedNote.createdAt}</code>
+								</div>
+
+								<div className="mt-1">
+									updatedAt:{' '}
+									<code className="font-mono">{selectedNote.updatedAt}</code>
+								</div>
+
+								<div className="mt-3">
+									description:{' '}
+									{selectedNote.description ? (
+										<span>{selectedNote.description}</span>
+									) : (
+										<span className="muted">пусто</span>
+									)}
 								</div>
 							</div>
 
