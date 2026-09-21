@@ -10,8 +10,7 @@ type Props = {
 	payload: HelloPayload
 }
 
-// Имитирует загрузку данных: иногда возвращает ошибку.
-// Здесь важна не сеть, а состояния UI и контракт данных.
+// Имитируем загрузку: важны состояния UI, а не правильная сеть.
 function fakeLoadNotes(source: DemoNote[]): Promise<DemoNote[]> {
 	return new Promise((resolve, reject) => {
 		window.setTimeout(() => {
@@ -27,14 +26,13 @@ function fakeLoadNotes(source: DemoNote[]): Promise<DemoNote[]> {
 export default function HelloClient({payload}: Props) {
 	const [clicks, setClicks] = useState(0)
 
-	// notes доступны только когда state === "ready"
+	// Loadable: данные доступны только в состоянии ready
 	const [notes, setNotes] = useState<Loadable<DemoNote[]>>({
 		state: 'ready',
 		data: payload.initialNotes,
 	})
 
-	// Фильтр статуса: union ограничивает допустимые значения.
-	// "all" добавлен как отдельный вариант — не смешиваем с DemoNoteStatus.
+	// Фильтр на union-типе, без произвольных строк
 	const [statusFilter, setStatusFilter] = useState<DemoNoteStatus | 'all'>(
 		'all',
 	)
@@ -56,16 +54,13 @@ export default function HelloClient({payload}: Props) {
 		}
 	}
 
-	// TypeScript "ведёт" код: нельзя обратиться к data, если state не ready.
 	function renderNotes(state: Loadable<DemoNote[]>) {
 		switch (state.state) {
 			case 'idle':
-				return (
-					<p className="text-sm text-slate-400">Заметки ещё не загружались.</p>
-				)
+				return <p className="muted">Заметки ещё не загружались.</p>
 
 			case 'loading':
-				return <p className="text-sm text-slate-400">Загрузка…</p>
+				return <p className="muted">Загрузка…</p>
 
 			case 'error':
 				return <p className="text-sm text-red-400">{state.message}</p>
@@ -91,46 +86,67 @@ export default function HelloClient({payload}: Props) {
 								all
 							</button>
 
-							{(['draft', 'published', 'archived'] as const).map((status) => (
+							{(['draft', 'published', 'archived'] as const).map((s) => (
 								<button
-									key={status}
+									key={s}
 									type="button"
 									className={
-										statusFilter === status
-											? 'app-btn'
-											: 'app-btn app-btn-ghost'
+										statusFilter === s ? 'app-btn' : 'app-btn app-btn-ghost'
 									}
-									onClick={() => setStatusFilter(status)}
+									onClick={() => setStatusFilter(s)}
 								>
-									{status}
+									{s}
 								</button>
 							))}
 						</div>
 
 						<ul className="grid gap-3">
-							{filtered.map((note) => (
-								<li key={note.id} className="app-card">
+							{filtered.map((n) => (
+								<li key={n.id} className="app-card">
 									<div className="flex flex-wrap items-center gap-2">
-										<span className="font-medium text-slate-100">
-											{note.title}
-										</span>
+										<div className="font-medium text-slate-100">{n.title}</div>
+
 										<span className="rounded-lg border border-slate-700 bg-slate-900/40 px-2 py-0.5 text-xs text-slate-200">
-											{note.status}
+											{n.status}
 										</span>
-										<span className="text-xs text-slate-400">
-											id: {note.id}
+
+										<span className="text-xs text-slate-400">id: {n.id}</span>
+
+										<span className="rounded-lg border border-slate-700 bg-slate-900/40 px-2 py-0.5 text-xs text-slate-200">
+											priority: {n.priority}
 										</span>
 									</div>
 
-									<div className="mt-2 flex flex-wrap gap-1.5">
-										{note.tags.map((tag) => (
+									{n.description ? (
+										<p className="mt-2 text-sm text-slate-300">
+											{n.description}
+										</p>
+									) : (
+										<p className="mt-2 text-sm text-slate-500">
+											description: пусто
+										</p>
+									)}
+
+									<div className="mt-3 flex flex-wrap gap-1.5">
+										{n.tags.map((t) => (
 											<span
-												key={tag}
+												key={t}
 												className="rounded-lg border border-slate-700 bg-slate-900/40 px-2 py-0.5 text-xs text-slate-200"
 											>
-												#{tag}
+												#{t}
 											</span>
 										))}
+									</div>
+
+									<div className="mt-3 text-xs text-slate-500">
+										<div>
+											createdAt:{' '}
+											<code className="font-mono">{n.createdAt}</code>
+										</div>
+										<div>
+											updatedAt:{' '}
+											<code className="font-mono">{n.updatedAt}</code>
+										</div>
 									</div>
 								</li>
 							))}
@@ -140,41 +156,45 @@ export default function HelloClient({payload}: Props) {
 			}
 
 			default:
-				// Новое состояние без обработки → ошибка компиляции, а не молчаливый баг.
 				return assertNever(state)
 		}
 	}
 
 	return (
-		<section className="rounded-xl border border-slate-700 p-5">
-			<p className="text-sm text-slate-400">{renderedLabel}</p>
+		<section className="space-y-4">
+			<div className="app-card">
+				<div className="text-sm text-slate-300">{renderedLabel}</div>
 
-			<div className="mt-3 text-sm">
-				renderedAt: <code className="font-mono">{payload.renderedAt}</code>
+				<div className="mt-3 text-sm">
+					<div className="text-slate-300">
+						renderedAt (server):{' '}
+						<code className="font-mono text-slate-200">
+							{payload.renderedAt}
+						</code>
+					</div>
+				</div>
+
+				<div className="mt-4 flex flex-wrap gap-2">
+					<button
+						type="button"
+						className="app-btn"
+						onClick={() => setClicks((c) => c + 1)}
+					>
+						Clicks: {clicks}
+					</button>
+
+					<button
+						type="button"
+						className="app-btn app-btn-ghost"
+						onClick={reloadNotes}
+						disabled={notes.state === 'loading'}
+					>
+						Reload notes
+					</button>
+				</div>
 			</div>
 
-			<div className="mt-4">{renderNotes(notes)}</div>
-
-			<div className="mt-4 flex flex-wrap gap-2">
-				<button
-					type="button"
-					className="rounded-lg bg-slate-700 px-3 py-2 text-sm font-semibold text-white"
-					onClick={() => setClicks((c) => c + 1)}
-				>
-					Clicks: {clicks}
-				</button>
-
-				<button
-					type="button"
-					className="rounded-lg border border-slate-600 px-3 py-2 text-sm font-semibold text-slate-200"
-					onClick={reloadNotes}
-					// Ограничение в UI повторяет ограничение типа:
-					// пока loading — повторный запрос невозможен.
-					disabled={notes.state === 'loading'}
-				>
-					Reload notes
-				</button>
-			</div>
+			<div className="app-card">{renderNotes(notes)}</div>
 		</section>
 	)
 }
