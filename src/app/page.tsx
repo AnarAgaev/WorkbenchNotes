@@ -1,42 +1,74 @@
 // src/app/page.tsx
 import Link from 'next/link'
+// import {getWorkbenchDb} from '@/data/demo'
+import {getDefaultDb} from '@/data/demo'
+import Container from './components/layout/Container'
 
 export default function HomePage() {
+	// const db = getWorkbenchDb()
+	const db = getDefaultDb()
+
+	const projects = [...db.projects].sort((a, b) => {
+		const ad = a.isDemo ? 0 : 1
+		const bd = b.isDemo ? 0 : 1
+		if (ad !== bd) return ad - bd
+		return a.title.localeCompare(b.title, 'ru')
+	})
+
 	return (
-		<div className="mx-auto max-w-5xl px-6 py-10">
-			<h1 className="text-2xl font-semibold">Workbench Notes</h1>
-
-			<p className="mt-2 text-sm text-slate-400">
-				Это учебный проект курса Next.js + TypeScript. Проект будет постепенно
-				развиваться: появятся проекты, разделы, заметки и рабочее пространство.
-			</p>
-
-			<div className="mt-8 grid gap-4 sm:grid-cols-2">
-				<section className="rounded-xl border border-slate-200 p-5">
-					<div className="text-sm font-semibold">Workbench</div>
-					<p className="mt-2 text-sm text-slate-400">
-						На следующих шагах главная страница станет витриной проектов.
-					</p>
-
-					<div className="mt-4 text-sm text-slate-400">
-						Первый демо-проект появится чуть позже.
+		<Container>
+			<section className="app-section">
+				<div className="app-section__head">
+					<div>
+						<h1 className="text-2xl font-semibold">Проекты</h1>
+						<p className="muted mt-1">
+							Проекты берутся из WorkbenchDb и отображаются на главной.
+						</p>
 					</div>
-				</section>
+				</div>
 
-				<section className="rounded-xl border border-slate-200 p-5">
-					<div className="text-sm font-semibold">Демо-страницы</div>
-					<p className="mt-2 text-sm text-slate-400">
-						Учебные упражнения будут жить отдельно. Они не заменяют продукт, а
-						тренируют паттерны.
-					</p>
+				<div className="app-card">
+					<div className="text-sm font-semibold mb-3">Список проектов</div>
 
-					<div className="mt-4">
-						<Link className="underline underline-offset-4" href="/demo">
-							Открыть /demo
+					<div className="flex flex-col gap-2">
+						{projects.map((p) => (
+							<div key={p.id} className="app-row app-card app-card--soft">
+								<div>
+									<div className="font-semibold">{p.title}</div>
+									<div className="muted text-xs mt-1">
+										уровень:{' '}
+										<span className="text-slate-200">
+											{p.structure === 'entries' ? '2' : '2/3'}
+										</span>{' '}
+										• id: <span className="text-slate-200">{p.id}</span>
+									</div>
+								</div>
+
+								<button
+									type="button"
+									className="app-btn app-btn-ghost"
+									disabled
+								>
+									Открыть
+								</button>
+							</div>
+						))}
+					</div>
+				</div>
+			</section>
+
+			<section className="mt-8">
+				<div className="app-card app-card--soft">
+					<div className="text-sm font-semibold text-slate-100">Демо</div>
+					<p className="muted mt-1 text-sm">Лаборатория демо паттернов</p>
+
+					<div className="mt-3">
+						<Link href="/demo" className="app-btn app-btn-ghost w-fit">
+							Открыть демо
 						</Link>
 					</div>
-				</section>
-			</div>
-		</div>
+				</div>
+			</section>
+		</Container>
 	)
 }
