@@ -1,18 +1,21 @@
 import type {Metadata} from 'next'
-import {Geist, Geist_Mono} from 'next/font/google'
+import localFont from 'next/font/local'
 import AppFooter from '@/components/layout/AppFooter'
 import Providers from '@/lib/Providers'
 import AppHeader from './components/layout/AppHeader'
 import './globals.css'
 
-const geistSans = Geist({
+// Шрифты лежат локально: сборка не зависит от доступа к Google Fonts
+const geistSans = localFont({
+	src: './fonts/geist-latin.woff2',
 	variable: '--font-geist-sans',
-	subsets: ['latin'],
+	weight: '100 900',
 })
 
-const geistMono = Geist_Mono({
+const geistMono = localFont({
+	src: './fonts/geist-mono-latin.woff2',
 	variable: '--font-geist-mono',
-	subsets: ['latin'],
+	weight: '100 900',
 })
 
 export const metadata: Metadata = {
