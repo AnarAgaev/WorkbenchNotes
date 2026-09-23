@@ -1,6 +1,7 @@
 import type {Metadata} from 'next'
 import {Geist, Geist_Mono} from 'next/font/google'
 import AppFooter from '@/components/layout/AppFooter'
+import Providers from '@/lib/Providers'
 import AppHeader from './components/layout/AppHeader'
 import './globals.css'
 
@@ -25,14 +26,16 @@ export default function RootLayout({children}: LayoutProps<'/'>) {
 			lang="en"
 			className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
 		>
-			<body>
-				{/* Базовый каркас высоты: пригодится дальше, когда появятся внутренние скроллы */}
-				<div className="min-h-dvh flex flex-col">
-					<AppHeader />
-					<main className="flex-1 min-h-0">{children}</main>
-					<AppFooter />
-				</div>
-			</body>
+			<Providers>
+				<body>
+					{/* Базовый каркас высоты: пригодится дальше, когда появятся внутренние скроллы */}
+					<div className="min-h-dvh flex flex-col">
+						<AppHeader />
+						<main className="flex-1 min-h-0">{children}</main>
+						<AppFooter />
+					</div>
+				</body>
+			</Providers>
 		</html>
 	)
 }

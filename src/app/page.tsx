@@ -1,12 +1,12 @@
 // src/app/page.tsx
+'use client'
+
 import Link from 'next/link'
-// import {getWorkbenchDb} from '@/data/demo'
-import {getDefaultDb} from '@/data/demo'
+import {useWorkbenchStore} from '@/lib/workbenchStore'
 import Container from './components/layout/Container'
 
 export default function HomePage() {
-	// const db = getWorkbenchDb()
-	const db = getDefaultDb()
+	const {db} = useWorkbenchStore()
 
 	const projects = [...db.projects].sort((a, b) => {
 		const ad = a.isDemo ? 0 : 1
@@ -22,7 +22,8 @@ export default function HomePage() {
 					<div>
 						<h1 className="text-2xl font-semibold">Проекты</h1>
 						<p className="muted mt-1">
-							Проекты берутся из WorkbenchDb и отображаются на главной.
+							Демо-проекты уже добавлены. Ниже позже появится создание новых
+							проектов.
 						</p>
 					</div>
 				</div>
@@ -44,13 +45,9 @@ export default function HomePage() {
 									</div>
 								</div>
 
-								<button
-									type="button"
-									className="app-btn app-btn-ghost"
-									disabled
-								>
+								<Link className="app-btn app-btn-primary" href={`/p/${p.id}`}>
 									Открыть
-								</button>
+								</Link>
 							</div>
 						))}
 					</div>
@@ -60,7 +57,9 @@ export default function HomePage() {
 			<section className="mt-8">
 				<div className="app-card app-card--soft">
 					<div className="text-sm font-semibold text-slate-100">Демо</div>
-					<p className="muted mt-1 text-sm">Лаборатория демо паттернов</p>
+					<p className="muted mt-1 text-sm">
+						Отдельная лаборатория модулей 1–2 (формы, Zod, RHF, state).
+					</p>
 
 					<div className="mt-3">
 						<Link href="/demo" className="app-btn app-btn-ghost w-fit">

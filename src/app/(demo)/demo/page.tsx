@@ -26,6 +26,24 @@ export default function DemoIndexPage() {
 						Первый тип данных, который сервер передаёт в клиентский компонент.
 					</div>
 				</Link>
+				<Link
+					href="/demo-params/hello"
+					className="rounded-xl border border-slate-200 p-5 hover:bg-white/5"
+				>
+					<div className="text-sm font-semibold">${`demo-params/[value]`}</div>
+					<div className="mt-2 text-sm text-slate-400">
+						params как внешний ввод, всегда string.
+					</div>
+				</Link>
+				<Link
+					href="/demo-search?q=hello"
+					className="rounded-xl border border-slate-200 p-5 hover:bg-white/5"
+				>
+					<div className="text-sm font-semibold">${`demo-search`}</div>
+					<div className="mt-2 text-sm text-slate-400">
+						searchParams: string | string[] | undefined в живом виде.
+					</div>
+				</Link>
 			</div>
 		</div>
 	)
