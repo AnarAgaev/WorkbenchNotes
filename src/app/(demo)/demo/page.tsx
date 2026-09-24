@@ -44,6 +44,17 @@ export default function DemoIndexPage() {
 						searchParams: string | string[] | undefined в живом виде.
 					</div>
 				</Link>
+				<Link
+					href="/demo-form"
+					className="rounded-xl border border-slate-200 p-5 hover:bg-white/5"
+				>
+					<div className="text-sm font-semibold">
+						Модуль 2 — Формы и валидация
+					</div>
+					<div className="mt-2 text-sm text-slate-400">
+						Форма как контракт: errors, pending, disable, success state.
+					</div>
+				</Link>
 			</div>
 		</div>
 	)
