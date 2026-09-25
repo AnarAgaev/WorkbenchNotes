@@ -1,6 +1,7 @@
 // src/demo/formContract.ts
 // Контракт ошибок формы: fieldErrors + formError
 // и UI-состояния формы: idle/pending/error/success.
+import {createNoteInputSchema} from '@/demo/noteSchemas'
 
 export type FieldErrors<Fields extends string> = Partial<Record<Fields, string>>
 
@@ -20,10 +21,14 @@ export type DemoFormFields = 'title'
 export type DemoFormState = FormUiState<DemoFormFields>
 
 export function validateTitle(title: string): string | null {
-	const v = title.trim()
+	const res = createNoteInputSchema.safeParse({title})
 
-	if (!v) return 'Введите заголовок.'
-	if (v.length > 60) return 'Заголовок слишком длинный (макс. 60).'
+	if (res.success) return null
 
-	return null
+	// flatten() группирует ошибки по полям:
+	// { fieldErrors: { title?: string[] }, formErrors: string[] }
+	const flat = res.error.flatten()
+
+	const titleErrors = flat.fieldErrors.title
+	return titleErrors?.[0] ?? 'Некорректный заголовок.'
 }
