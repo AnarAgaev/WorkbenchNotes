@@ -3,6 +3,7 @@
 
 import {useRouter, useSearchParams} from 'next/navigation'
 import {useEffect, useMemo} from 'react'
+import CreateNoteFormClient from '@/components/forms/CreateNoteFormClient'
 import Collapsible from '@/components/ui/Collapsible'
 import Input from '@/components/ui/Input'
 import {useWorkbenchStore} from '@/lib/workbenchStore'
@@ -25,7 +26,8 @@ export default function ProjectTreeClient({projectId}: {projectId: Id}) {
 	const router = useRouter()
 	const sp = useSearchParams()
 
-	const {getProject, getSections, getNotesByParent} = useWorkbenchStore()
+	const {getProject, getSections, getNotesByParent, createNote} =
+		useWorkbenchStore()
 
 	const project = getProject(projectId)
 
@@ -177,6 +179,33 @@ export default function ProjectTreeClient({projectId}: {projectId: Id}) {
 						if (v.trim()) next.set('q', v)
 						else next.delete('q')
 						next.delete('note')
+						go(next)
+					}}
+				/>
+
+				<CreateNoteFormClient
+					disabled={!notesParent}
+					onCreate={({title}) => {
+						if (!notesParent) return
+
+						const created = createNote(
+							projectId,
+							notesParent.parentType,
+							notesParent.parentId,
+							title,
+						)
+
+						const next = new URLSearchParams(sp.toString())
+						next.set('note', created.id)
+
+						if (notesParent.parentType === 'section') {
+							next.set('section', notesParent.parentId)
+						} else {
+							next.delete('section')
+						}
+
+						next.delete('q')
+
 						go(next)
 					}}
 				/>

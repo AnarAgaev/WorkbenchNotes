@@ -4,6 +4,7 @@
 import type React from 'react'
 import {createContext, useCallback, useContext, useMemo, useState} from 'react'
 import {getDefaultDb} from '@/data/demo'
+import {v4 as uuid} from 'uuid'
 
 type Store = {
 	db: WorkbenchDb
@@ -21,6 +22,12 @@ type Store = {
 
 	// mutations (in-memory)
 	updateNoteContent: (noteId: Id, nextHtml: string) => void
+	createNote: (
+		projectId: Id,
+		parentType: NoteParentType,
+		parentId: Id,
+		title: string,
+	) => Note
 }
 
 const WorkbenchStoreContext = createContext<Store | null>(null)
@@ -75,6 +82,31 @@ export function WorkbenchStoreProvider({
 		}))
 	}, [])
 
+	const createNote = useCallback(
+		(projectId: Id, parentType: NoteParentType, parentId: Id, title: string) => {
+			const id = `n-${uuid()}`
+			const now = new Date().toISOString()
+
+			const note: Note = {
+				id,
+				projectId,
+				parentType,
+				parentId,
+				title,
+				contentHtml: '<p><br></p>',
+				updatedAt: now,
+			}
+
+			setDb((prev) => ({
+				...prev,
+				notes: [...prev.notes, note],
+			}))
+
+			return note
+		},
+		[],
+	)
+
 	const value = useMemo<Store>(
 		() => ({
 			db,
@@ -83,8 +115,17 @@ export function WorkbenchStoreProvider({
 			getSections,
 			getNotesByParent,
 			updateNoteContent,
+			createNote,
 		}),
-		[db, getProject, getNote, getSections, getNotesByParent, updateNoteContent],
+		[
+			db,
+			getProject,
+			getNote,
+			getSections,
+			getNotesByParent,
+			updateNoteContent,
+			createNote,
+		],
 	)
 
 	return (
