@@ -28,6 +28,17 @@ type Store = {
 		parentId: Id,
 		title: string,
 	) => Note
+	renameNote: (noteId: Id, nextTitle: string) => void
+	deleteNote: (noteId: Id) => void
+	createSection: (projectId: Id, title: string) => Section
+	renameSection: (sectionId: Id, nextTitle: string) => void
+	deleteSection: (sectionId: Id) => void
+
+	createProject: (title: string, structure: Project['structure']) => Project
+	renameProject: (projectId: Id, nextTitle: string) => void
+	deleteProject: (projectId: Id) => void
+
+	isDemoProject: (projectId: Id) => boolean
 }
 
 const WorkbenchStoreContext = createContext<Store | null>(null)
@@ -107,6 +118,127 @@ export function WorkbenchStoreProvider({
 		[],
 	)
 
+	const renameNote = useCallback((noteId: Id, nextTitle: string) => {
+		setDb((prev) => ({
+			...prev,
+			notes: prev.notes.map((n) =>
+				n.id === noteId
+					? {...n, title: nextTitle, updatedAt: new Date().toISOString()}
+					: n,
+			),
+		}))
+	}, [])
+
+	const deleteNote = useCallback((noteId: Id) => {
+		setDb((prev) => ({
+			...prev,
+			notes: prev.notes.filter((n) => n.id !== noteId),
+		}))
+	}, [])
+
+	const createSection = useCallback(
+		(projectId: Id, title: string) => {
+			const id = `s-${uuid()}`
+
+			// Максимальный order внутри проекта, чтобы новый раздел всегда добавлялся в конец.
+			const maxOrder = db.sections
+				.filter((s) => s.projectId === projectId)
+				.reduce((m, s) => Math.max(m, s.order), 0)
+
+			const section: Section = {
+				id,
+				projectId,
+				title: title.trim(),
+				order: maxOrder + 1,
+			}
+
+			setDb((prev) => ({
+				...prev,
+				sections: [...prev.sections, section],
+			}))
+
+			return section
+		},
+		[db.sections],
+	)
+
+	const renameSection = useCallback((sectionId: Id, nextTitle: string) => {
+		setDb((prev) => ({
+			...prev,
+			sections: prev.sections.map((s) =>
+				s.id === sectionId ? {...s, title: nextTitle} : s,
+			),
+		}))
+	}, [])
+
+	const deleteSection = useCallback((sectionId: Id) => {
+		// Удаление раздела каскадно удаляет его заметки.
+		setDb((prev) => ({
+			...prev,
+			sections: prev.sections.filter((s) => s.id !== sectionId),
+			notes: prev.notes.filter(
+				(n) => !(n.parentType === 'section' && n.parentId === sectionId),
+			),
+		}))
+	}, [])
+
+	const isDemoProject = useCallback((projectId: Id) => {
+		return projectId === 'demo-notes' || projectId === 'demo-nested'
+	}, [])
+
+	const createProject = useCallback(
+		(title: string, structure: Project['structure']) => {
+			const t = title.trim()
+			const now = new Date().toISOString()
+
+			const project: Project = {
+				id: `p-${uuid()}`,
+				title: t,
+				structure,
+				createdAt: now,
+			}
+
+			setDb((prev) => ({
+				...prev,
+				projects: [project, ...prev.projects],
+			}))
+
+			return project
+		},
+		[],
+	)
+
+	const renameProject = useCallback(
+		(projectId: Id, nextTitle: string) => {
+			if (isDemoProject(projectId)) return
+
+			const t = nextTitle.trim()
+			if (t.length < 2) return
+
+			setDb((prev) => ({
+				...prev,
+				projects: prev.projects.map((p) =>
+					p.id === projectId ? {...p, title: t} : p,
+				),
+			}))
+		},
+		[isDemoProject],
+	)
+
+	const deleteProject = useCallback(
+		(projectId: Id) => {
+			if (isDemoProject(projectId)) return
+
+			setDb((prev) => ({
+				...prev,
+				projects: prev.projects.filter((p) => p.id !== projectId),
+				sections: prev.sections.filter((s) => s.projectId !== projectId),
+				notes: prev.notes.filter((n) => n.projectId !== projectId),
+			}))
+		},
+		[isDemoProject],
+	)
+
 	const value = useMemo<Store>(
 		() => ({
 			db,
@@ -116,6 +248,15 @@ export function WorkbenchStoreProvider({
 			getNotesByParent,
 			updateNoteContent,
 			createNote,
+			renameNote,
+			deleteNote,
+			createSection,
+			renameSection,
+			deleteSection,
+			createProject,
+			renameProject,
+			deleteProject,
+			isDemoProject,
 		}),
 		[
 			db,
@@ -125,6 +266,15 @@ export function WorkbenchStoreProvider({
 			getNotesByParent,
 			updateNoteContent,
 			createNote,
+			renameNote,
+			deleteNote,
+			createSection,
+			renameSection,
+			deleteSection,
+			createProject,
+			renameProject,
+			deleteProject,
+			isDemoProject,
 		],
 	)
 
