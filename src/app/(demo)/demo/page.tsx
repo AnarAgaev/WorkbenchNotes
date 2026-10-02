@@ -57,6 +57,17 @@ const modules: DemoModule[] = [
 			},
 		],
 	},
+	{
+		title: 'Модуль 4 — Server Actions',
+		desc: 'Асинхронные функции на сервере',
+		items: [
+			{
+				href: '/form-lab',
+				title: 'form-lab',
+				desc: 'форма → Zod → Server Action',
+			},
+		],
+	},
 ]
 
 export default function DemoIndexPage() {

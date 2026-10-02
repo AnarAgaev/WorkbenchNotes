@@ -25,3 +25,17 @@ export const editTitleSchema = z.object({
 })
 
 export type EditTitleInput = z.infer<typeof editTitleSchema>
+
+// Демо модуля 4: Server Actions + форма
+export const formLabSchema = z.object({
+	title: titleSchema,
+})
+
+export type FormLabInput = z.infer<typeof formLabSchema>
+
+export const createProjectSchema = z.object({
+	title: titleSchema,
+	structure: z.enum(['entries', 'sections']),
+})
+
+export type CreateProjectInput = z.infer<typeof createProjectSchema>
