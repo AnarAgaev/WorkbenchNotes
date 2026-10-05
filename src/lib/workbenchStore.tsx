@@ -2,7 +2,15 @@
 'use client'
 
 import type React from 'react'
-import {createContext, useCallback, useContext, useMemo, useState} from 'react'
+import {
+	createContext,
+	useCallback,
+	useContext,
+	useEffect,
+	useMemo,
+	useState,
+} from 'react'
+import {getDbSnapshot} from '@/app/_actions/db'
 import {getDefaultDb} from '@/data/demo'
 import {v4 as uuid} from 'uuid'
 
@@ -39,6 +47,9 @@ type Store = {
 	deleteProject: (projectId: Id) => void
 
 	isDemoProject: (projectId: Id) => boolean
+
+	insertProjectLocal: (project: Project) => void
+	refreshFromServer: () => Promise<void>
 }
 
 const WorkbenchStoreContext = createContext<Store | null>(null)
@@ -49,6 +60,44 @@ export function WorkbenchStoreProvider({
 	children: React.ReactNode
 }) {
 	const [db, setDb] = useState<WorkbenchDb>(() => getDefaultDb())
+
+	const refreshFromServer = useCallback(async () => {
+		const snapshot = await getDbSnapshot()
+		setDb(snapshot)
+	}, [])
+
+	useEffect(() => {
+		// При старте store сначала живёт на demo-db (getDefaultDb),
+		// затем один раз заменяется серверным снапшотом.
+		let alive = true
+
+		void (async () => {
+			try {
+				const snapshot = await getDbSnapshot()
+				if (!alive) return
+				setDb(snapshot)
+			} catch {
+				// На этом этапе остаёмся на demo-db, без падения UI.
+			}
+		})()
+
+		return () => {
+			alive = false
+		}
+	}, [])
+
+	const insertProjectLocal = useCallback((project: Project) => {
+		setDb((prev) => {
+			// Защита от дублей: один id — один проект.
+			if (prev.projects.some((p) => p.id === project.id)) return prev
+
+			return {
+				...prev,
+				// Новые проекты кладём наверх, чтобы результат был виден сразу.
+				projects: [project, ...prev.projects],
+			}
+		})
+	}, [])
 
 	const getProject = useCallback(
 		(projectId: Id) => db.projects.find((p) => p.id === projectId),
@@ -257,6 +306,8 @@ export function WorkbenchStoreProvider({
 			renameProject,
 			deleteProject,
 			isDemoProject,
+			insertProjectLocal,
+			refreshFromServer,
 		}),
 		[
 			db,
@@ -275,6 +326,8 @@ export function WorkbenchStoreProvider({
 			renameProject,
 			deleteProject,
 			isDemoProject,
+			insertProjectLocal,
+			refreshFromServer,
 		],
 	)
 

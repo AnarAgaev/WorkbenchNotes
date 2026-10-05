@@ -1,0 +1,128 @@
+{
+  "projects": [
+    {
+      "id": "p-a9e55c96-914d-4028-8d82-fd54ab482c0f",
+      "title": "Мои заметки",
+      "structure": "sections",
+      "createdAt": "2026-10-05T16:16:17.860Z",
+      "isDemo": false
+    },
+    {
+      "id": "demo-notes",
+      "title": "Заметки",
+      "createdAt": "2026-10-05T16:13:37.613Z",
+      "structure": "entries",
+      "isDemo": true
+    },
+    {
+      "id": "demo-nested",
+      "title": "Вложенные заметки",
+      "createdAt": "2026-10-05T16:13:37.613Z",
+      "structure": "sections",
+      "isDemo": true
+    }
+  ],
+  "sections": [
+    {
+      "id": "s-ideas",
+      "projectId": "demo-nested",
+      "title": "Идеи",
+      "order": 1
+    },
+    {
+      "id": "s-drafts",
+      "projectId": "demo-nested",
+      "title": "Черновики",
+      "order": 2
+    },
+    {
+      "id": "s-plan",
+      "projectId": "demo-nested",
+      "title": "План",
+      "order": 3
+    }
+  ],
+  "notes": [
+    {
+      "id": "n-1",
+      "projectId": "demo-notes",
+      "parentType": "project",
+      "parentId": "demo-notes",
+      "title": "Добро пожаловать",
+      "contentHtml": "<p>Это демо проекта <strong>2 уровня</strong>: проект → заметки.</p>",
+      "updatedAt": "2026-10-05T16:13:37.613Z"
+    },
+    {
+      "id": "n-2",
+      "projectId": "demo-notes",
+      "parentType": "project",
+      "parentId": "demo-notes",
+      "title": "Идея",
+      "contentHtml": "<p>Здесь будут быстрые заметки без вложенности.</p><ul><li>мысль</li><li>набросок</li></ul>",
+      "updatedAt": "2026-10-05T16:13:37.613Z"
+    },
+    {
+      "id": "n-3",
+      "projectId": "demo-notes",
+      "parentType": "project",
+      "parentId": "demo-notes",
+      "title": "Чек-лист",
+      "contentHtml": "<ol><li>Открыть</li><li>Редактировать</li><li>Сохранить (позже)</li></ol>",
+      "updatedAt": "2026-10-05T16:13:37.613Z"
+    },
+    {
+      "id": "ni-1",
+      "projectId": "demo-nested",
+      "parentType": "section",
+      "parentId": "s-ideas",
+      "title": "Список идей",
+      "contentHtml": "<p>В этом демо проекте <strong>3 уровня</strong>: проект → разделы → заметки.</p>",
+      "updatedAt": "2026-10-05T16:13:37.613Z"
+    },
+    {
+      "id": "ni-2",
+      "projectId": "demo-nested",
+      "parentType": "section",
+      "parentId": "s-ideas",
+      "title": "Скетч функции",
+      "contentHtml": "<p>Быстро набросать фичу:</p><pre><code>UI → State → Save</code></pre>",
+      "updatedAt": "2026-10-05T16:13:37.613Z"
+    },
+    {
+      "id": "nd-1",
+      "projectId": "demo-nested",
+      "parentType": "section",
+      "parentId": "s-drafts",
+      "title": "Шаблон заметки",
+      "contentHtml": "<h3>Шаблон</h3><p>Проблема → Решение → Шаги.</p>",
+      "updatedAt": "2026-10-05T16:13:37.613Z"
+    },
+    {
+      "id": "nd-2",
+      "projectId": "demo-nested",
+      "parentType": "section",
+      "parentId": "s-drafts",
+      "title": "Черновик текста",
+      "contentHtml": "<p>Набросок абзаца на русском. Потом отредактируем в Quill.</p>",
+      "updatedAt": "2026-10-05T16:13:37.613Z"
+    },
+    {
+      "id": "np-1",
+      "projectId": "demo-nested",
+      "parentType": "section",
+      "parentId": "s-plan",
+      "title": "План недели",
+      "contentHtml": "<ul><li>Понедельник — вход</li><li>Вторник — заметки</li><li>Среда — рефакторинг</li></ul>",
+      "updatedAt": "2026-10-05T16:13:37.613Z"
+    },
+    {
+      "id": "np-2",
+      "projectId": "demo-nested",
+      "parentType": "section",
+      "parentId": "s-plan",
+      "title": "План курса",
+      "contentHtml": "<p>Постепенно строим Workbench Notes (TS) и по дороге учим Next + TypeScript.</p>",
+      "updatedAt": "2026-10-05T16:13:37.613Z"
+    }
+  ]
+}

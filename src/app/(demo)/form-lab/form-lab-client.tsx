@@ -42,7 +42,9 @@ export default function FormLabClient() {
 					}}
 				>
 					<div className="space-y-1">
-						<label className="text-xs text-slate-400">Название</label>
+						<label className="text-xs text-slate-400" htmlFor="">
+							Название
+						</label>
 
 						<input
 							// name обязателен: именно так значение попадёт в FormData.

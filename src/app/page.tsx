@@ -5,21 +5,16 @@ import {useRouter} from 'next/navigation'
 import {useMemo, useState} from 'react'
 
 import Container from '@/app/components/layout/Container'
+import CreateProjectInlineActionClient from '@/components/forms/CreateProjectInlineActionClient'
 import InlineEdit from '@/components/ui/InlineEdit'
-import Input from '@/components/ui/Input'
 import {useWorkbenchStore} from '@/lib/workbenchStore'
-
-type Structure = 'entries' | 'sections'
 
 export default function HomePage() {
 	const router = useRouter()
 
-	const {db, createProject, renameProject, deleteProject, isDemoProject} =
-		useWorkbenchStore()
+	const {db, renameProject, deleteProject, isDemoProject} = useWorkbenchStore()
 
 	const [adding, setAdding] = useState(false)
-	const [newTitle, setNewTitle] = useState('')
-	const [newStructure, setNewStructure] = useState<Structure>('entries')
 	const [editingProjectId, setEditingProjectId] = useState<Id | null>(null)
 
 	const {colEntries, colSections} = useMemo(() => {
@@ -44,19 +39,6 @@ export default function HomePage() {
 
 		return {colEntries: entries, colSections: sections}
 	}, [db.projects, isDemoProject])
-
-	const submitCreate = () => {
-		const t = newTitle.trim()
-		if (t.length < 2) return
-
-		const created = createProject(t, newStructure)
-
-		setNewTitle('')
-		setNewStructure('entries')
-		setAdding(false)
-
-		router.push(`/p/${created.id}`)
-	}
 
 	const ProjectRow = ({p}: {p: Project}) => {
 		const demo = isDemoProject(p.id)
@@ -159,60 +141,12 @@ export default function HomePage() {
 				</div>
 
 				{adding && (
-					<div className="app-card">
-						<div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-							<div className="flex-1">
-								<div className="wb-tree-meta mb-1">Название</div>
-								<Input
-									placeholder="Например: Мои заметки…"
-									value={newTitle}
-									onChange={(e) => setNewTitle(e.target.value)}
-									onKeyDown={(e) => {
-										if (e.key === 'Enter') submitCreate()
-										if (e.key === 'Escape') {
-											setAdding(false)
-											setNewTitle('')
-											setNewStructure('entries')
-										}
-									}}
-								/>
-							</div>
-
-							<div className="sm:w-64">
-								<div className="wb-tree-meta mb-1">Тип проекта</div>
-								<select
-									className="app-input w-full"
-									value={newStructure}
-									onChange={(e) => setNewStructure(e.target.value as Structure)}
-								>
-									<option value="entries">Заметки</option>
-									<option value="sections">Вложенные заметки</option>
-								</select>
-							</div>
-
-							<div className="flex gap-2 sm:w-56">
-								<button
-									type="button"
-									className="app-btn flex-1"
-									onClick={submitCreate}
-								>
-									Создать
-								</button>
-
-								<button
-									type="button"
-									className="app-btn app-btn-ghost flex-1"
-									onClick={() => {
-										setAdding(false)
-										setNewTitle('')
-										setNewStructure('entries')
-									}}
-								>
-									Отмена
-								</button>
-							</div>
-						</div>
-					</div>
+					<CreateProjectInlineActionClient
+						onCancel={() => {
+							setAdding(false)
+							setEditingProjectId(null)
+						}}
+					/>
 				)}
 
 				<div className="grid gap-6 lg:grid-cols-2">
