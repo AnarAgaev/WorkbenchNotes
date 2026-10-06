@@ -1,6 +1,13 @@
 {
   "projects": [
     {
+      "id": "p-a38c3215-543d-49eb-aa09-03799c1d261e",
+      "title": "Мой блокнот",
+      "structure": "entries",
+      "createdAt": "2026-10-06T08:19:06.902Z",
+      "isDemo": false
+    },
+    {
       "id": "p-a9e55c96-914d-4028-8d82-fd54ab482c0f",
       "title": "Мои заметки",
       "structure": "sections",

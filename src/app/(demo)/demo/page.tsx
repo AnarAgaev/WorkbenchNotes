@@ -66,6 +66,11 @@ const modules: DemoModule[] = [
 				title: 'form-lab',
 				desc: 'форма → Zod → Server Action',
 			},
+			{
+				href: '/optimistic-lab',
+				title: 'optimistic-lab',
+				desc: 'optimistic + rollback (clientId)',
+			},
 		],
 	},
 ]

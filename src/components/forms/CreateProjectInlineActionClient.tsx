@@ -2,7 +2,14 @@
 'use client'
 
 import {useRouter} from 'next/navigation'
-import {useActionState, useEffect, useMemo, useRef, useState} from 'react'
+import {
+	useActionState,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+	useTransition,
+} from 'react'
 
 import {createProjectFormInitialState} from '@/lib/formStates'
 import type {CreateProjectFormState} from '@/lib/formTypes'
@@ -21,91 +28,86 @@ export default function CreateProjectInlineActionClient({
 	onCancel: () => void
 }) {
 	const router = useRouter()
-	const {insertProjectLocal} = useWorkbenchStore()
+	const store = useWorkbenchStore()
 
 	const [title, setTitle] = useState('')
 	const [structure, setStructure] = useState<Project['structure']>('entries')
 
-	// clientId отправляется на сервер как часть FormData.
-	// Позже пригодится для связки optimistic и серверного id.
+	// clientId нужен, чтобы optimistic-id совпал с серверным id: p-${clientId}
 	const clientId = useMemo(() => crypto.randomUUID(), [])
+	const optimisticId = `p-${clientId}`
 
-	// Запоминаем, что именно отправили, чтобы после ok-состояния собрать Project для local insert.
-	const lastSubmittedRef = useRef<{
-		title: string
-		structure: Project['structure']
-	} | null>(null)
+	// флаг: делали ли optimistic-вставку в текущем submit
+	// ref читается только в эффектах/хендлерах, не в render
+	const hadOptimisticInsertRef = useRef(false)
 
-	// Защита от повторной обработки одного и того же ok-состояния.
-	const handledClientIdRef = useRef<string | null>(null)
-
-	// Защита от повторного submit, пока предыдущая отправка ещё обрабатывается.
-	// Это особенно важно для inline-форм, где один пользовательский жест
-	// может косвенно вызвать повторную отправку.
-	const submitLockRef = useRef(false)
-
-	// useActionState даёт state (контракт результата), formAction (вызов action),
-	// isPending (индикатор блокировки UI).
 	const [state, formAction, isPending] = useActionState<
 		CreateProjectFormState,
 		FormData
 	>(createProjectFromForm, createProjectFormInitialState)
 
-	// После завершения action снова разрешаем submit.
-	// Это нужно и после успеха, и после серверной ошибки валидации.
+	const [, startTransition] = useTransition()
+
 	useEffect(() => {
-		if (!isPending) {
-			submitLockRef.current = false
+		if (state.ok) {
+			// успех: проект уже есть в store (optimistic),
+			// остаётся перейти в workspace и закрыть инлайн
+			hadOptimisticInsertRef.current = false
+
+			const {projectId} = state.value
+			startTransition(() => {
+				router.push(`/p/${projectId}`)
+				onCancel()
+			})
+
+			return
 		}
-	}, [isPending])
 
-	useEffect(() => {
-		// Успех обрабатывается один раз: добавляем проект в store и переходим в workspace.
-		if (!state.ok) return
+		// ошибка: откатываем optimistic-проект, если он был вставлен
+		if (
+			state.ok === false &&
+			(state.error || state.fieldErrors.title || state.fieldErrors.structure)
+		) {
+			if (!hadOptimisticInsertRef.current) return
 
-		const {projectId, clientId: returnedClientId} = state.value
+			hadOptimisticInsertRef.current = false
 
-		if (handledClientIdRef.current === returnedClientId) return
-		handledClientIdRef.current = returnedClientId
-
-		const submitted = lastSubmittedRef.current
-		if (!submitted) return
-
-		// Связываем server id и клиентские данные формы.
-		insertProjectLocal({
-			id: projectId,
-			title: submitted.title,
-			structure: submitted.structure,
-			createdAt: new Date().toISOString(),
-			isDemo: false,
-		})
-
-		router.push(`/p/${projectId}`)
-		onCancel()
-	}, [state, insertProjectLocal, router, onCancel])
+			startTransition(() => {
+				// rollback локального optimistic-результата
+				// deleteProject удалит проект и связанные данные из in-memory db
+				store.deleteProject(optimisticId)
+			})
+		}
+	}, [state, router, onCancel, startTransition, store, optimisticId])
 
 	return (
 		<div className="app-card">
 			<form
 				action={formAction}
 				className="flex flex-col gap-3 sm:flex-row sm:items-end"
-				onSubmit={(e) => {
-					// Если submit уже запущен — второй вызов формы не отправляем.
-					if (submitLockRef.current) {
-						e.preventDefault()
+				onSubmit={() => {
+					const t = title.trim()
+
+					// optimistic делаем только при валидном вводе,
+					// иначе пусть сервер вернёт fieldErrors без локальных вставок
+					if (t.length < 2) {
+						hadOptimisticInsertRef.current = false
 						return
 					}
 
-					// Блокируем повторный submit до завершения Server Action.
-					submitLockRef.current = true
+					hadOptimisticInsertRef.current = true
 
-					// UI-очистка при submit без setState-эффектов по результату.
-					const t = title.trim()
-					lastSubmittedRef.current = {title: t, structure}
-					setTitle('')
+					startTransition(() => {
+						store.insertProjectLocal({
+							id: optimisticId,
+							title: t,
+							structure,
+							createdAt: new Date().toISOString(),
+							isDemo: false,
+						})
+					})
 				}}
 			>
-				{/* action читает эти поля из FormData */}
 				<input type="hidden" name="clientId" value={clientId} />
 				<input type="hidden" name="structure" value={structure} />
 
@@ -125,7 +127,6 @@ export default function CreateProjectInlineActionClient({
 						autoComplete="off"
 						disabled={isPending}
 						onKeyDown={(e) => {
-							// Escape отменяет inline-режим без сабмита.
 							if (e.key === 'Escape') {
 								e.preventDefault()
 								onCancel()
