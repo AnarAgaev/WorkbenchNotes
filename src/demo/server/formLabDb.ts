@@ -1,29 +1,29 @@
 // src/demo/server/formLabDb.ts
-import {promises as fs} from 'fs'
-import path from 'path'
+import { promises as fs } from "fs";
+import path from "path";
 
 /**
  * Один элемент истории form-lab.
  * Это серверная истина: именно такие объекты будут лежать в .data/form-lab.json
  */
 export type FormLabItem = {
-	title: string
-	savedAt: string
-}
+  title: string;
+  savedAt: string;
+};
 
 /**
  * Храним данные в .data рядом с корнем проекта.
  * Это удобно для учебных демо: файл не попадает в git и легко чистится.
  */
-const DATA_DIR = path.join(process.cwd(), '.data')
-const DB_PATH = path.join(DATA_DIR, 'form-lab.json')
+const DATA_DIR = path.join(process.cwd(), ".data");
+const DB_PATH = path.join(DATA_DIR, "form-lab.json");
 
 /**
  * Гарантируем, что папка .data существует.
  * Без этого fs.writeFile упадёт, если папки ещё нет.
  */
 async function ensureDataDir() {
-	await fs.mkdir(DATA_DIR, {recursive: true})
+  await fs.mkdir(DATA_DIR, { recursive: true });
 }
 
 /**
@@ -31,7 +31,7 @@ async function ensureDataDir() {
  * Нужен, чтобы безопасно обращаться к полям после JSON.parse (там всегда unknown).
  */
 function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null
+  return typeof value === "object" && value !== null;
 }
 
 /**
@@ -44,9 +44,9 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  * - старые версии могли писать другой формат
  */
 function isFormLabItem(value: unknown): value is FormLabItem {
-	if (!isRecord(value)) return false
+  if (!isRecord(value)) return false;
 
-	return typeof value.title === 'string' && typeof value.savedAt === 'string'
+  return typeof value.title === "string" && typeof value.savedAt === "string";
 }
 
 /**
@@ -57,13 +57,13 @@ function isFormLabItem(value: unknown): value is FormLabItem {
  * Возвращаем "сырые" элементы (unknown[]), дальше их нормализует type guard.
  */
 function extractItems(parsed: unknown): unknown[] {
-	if (Array.isArray(parsed)) return parsed
+  if (Array.isArray(parsed)) return parsed;
 
-	if (isRecord(parsed) && Array.isArray(parsed.items)) {
-		return parsed.items
-	}
+  if (isRecord(parsed) && Array.isArray(parsed.items)) {
+    return parsed.items;
+  }
 
-	return []
+  return [];
 }
 
 /**
@@ -73,8 +73,8 @@ function extractItems(parsed: unknown): unknown[] {
  * Итог всегда FormLabItem[] без any и без падений в UI.
  */
 function normalizeItems(parsed: unknown): FormLabItem[] {
-	const rawItems = extractItems(parsed)
-	return rawItems.filter(isFormLabItem)
+  const rawItems = extractItems(parsed);
+  return rawItems.filter(isFormLabItem);
 }
 
 /**
@@ -88,16 +88,16 @@ function normalizeItems(parsed: unknown): FormLabItem[] {
  * Страница form-lab может отрендериться без падений.
  */
 export async function readFormLabItems(): Promise<FormLabItem[]> {
-	await ensureDataDir()
+  await ensureDataDir();
 
-	try {
-		const raw = await fs.readFile(DB_PATH, 'utf8')
-		const parsed: unknown = JSON.parse(raw)
+  try {
+    const raw = await fs.readFile(DB_PATH, "utf8");
+    const parsed: unknown = JSON.parse(raw);
 
-		return normalizeItems(parsed)
-	} catch {
-		return []
-	}
+    return normalizeItems(parsed);
+  } catch {
+    return [];
+  }
 }
 
 /**
@@ -111,9 +111,9 @@ export async function readFormLabItems(): Promise<FormLabItem[]> {
  * Это снижает вероятность расхождений и упрощает поддержку.
  */
 export async function appendFormLabItem(item: FormLabItem): Promise<void> {
-	const items = await readFormLabItems()
-	items.unshift(item)
+  const items = await readFormLabItems();
+  items.unshift(item);
 
-	await ensureDataDir()
-	await fs.writeFile(DB_PATH, JSON.stringify(items, null, 2), 'utf8')
+  await ensureDataDir();
+  await fs.writeFile(DB_PATH, JSON.stringify(items, null, 2), "utf8");
 }

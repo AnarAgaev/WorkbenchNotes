@@ -1,140 +1,131 @@
 // src/app/(demo)/demo-form/FormContractClient.tsx
-'use client'
+"use client";
 
-import {useMemo, useState} from 'react'
-import {type DemoFormState, validateTitle} from '@/demo/formContract'
-import {submitTitleServer} from '@/demo/formSubmit'
+import { useMemo, useState } from "react";
+import { submitTitleServer } from "@/demo/formSubmit";
+import { validateTitle, type DemoFormState } from "@/demo/formContract";
 
 // Учебная форма: показывает 4 состояния.
 // Здесь нет внешней проверки — pending и success имитируются таймером.
 export default function FormContractClient() {
-	const [title, setTitle] = useState('')
-	const [touched, setTouched] = useState(false)
-	const [state, setState] = useState<DemoFormState>({kind: 'idle'})
+  const [title, setTitle] = useState("");
+  const [touched, setTouched] = useState(false);
+  const [state, setState] = useState<DemoFormState>({ kind: "idle" });
 
-	// derived state: ошибка вычисляется из текущего title,
-	// а не хранится отдельным useState (меньше рассинхронизаций).
-	const titleError = useMemo(() => {
-		if (!touched) return null
+  // derived state: ошибка вычисляется из текущего title,
+  // а не хранится отдельным useState (меньше рассинхронизаций).
+  const titleError = useMemo(() => {
+    if (!touched) return null;
+    return validateTitle(title);
+  }, [title, touched]);
 
-		return validateTitle(title)
-	}, [title, touched])
+  const isPending = state.kind === "pending";
+  const isDisabled = isPending || Boolean(titleError);
 
-	const isPending = state.kind === 'pending'
-	const isDisabled = isPending || Boolean(titleError)
+  const formError = state.kind === "error" ? state.errors.formError : null;
+  const serverFieldError = state.kind === "error" ? state.errors.fieldErrors?.title ?? null : null;
 
-	async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-		e.preventDefault()
+  const fieldTitleError = titleError ?? serverFieldError;
 
-		setTouched(true)
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
 
-		// 1) Client UX: быстрый фидбек, не запускаем отправку
-		if (titleError) {
-			setState({kind: 'error', errors: {fieldErrors: {title: titleError}}})
-			return
-		}
+    setTouched(true);
 
-		// 2) pending
-		setState({kind: 'pending'})
+    const clientError = validateTitle(title);
+    if (clientError) {
+      setState({ kind: "error", errors: { fieldErrors: { title: clientError } } });
+      return;
+    }
 
-		// 3) Вторая проверка вне UI
-		const res = await submitTitleServer(title)
+    setState({ kind: "pending" });
 
-		if (!res.ok) {
-			setState({kind: 'error', errors: res.errors})
-			return
-		}
+    const res = await submitTitleServer(title);
 
-		setState({
-			kind: 'success',
-			message: `Заметка создана (demo): ${res.data.normalizedTitle}`,
-		})
-	}
+    if (!res.ok) {
+      setState({ kind: "error", errors: res.errors });
+      return;
+    }
 
-	function reset() {
-		setTitle('')
-		setTouched(false)
-		setState({kind: 'idle'})
-	}
+    setState({
+      kind: "success",
+      message: `Заметка создана (demo): ${res.data.normalizedTitle}`,
+    });
+  }
 
-	const formError = state.kind === 'error' ? state.errors.formError : null
-	const serverFieldError =
-		state.kind === 'error' ? (state.errors.fieldErrors?.title ?? null) : null
+  function reset() {
+    setTitle("");
+    setTouched(false);
+    setState({ kind: "idle" });
+  }
 
-	const fieldTitleError = titleError ?? serverFieldError
+  return (
+    <section className="mt-6 app-card">
+      <h2 className="text-sm font-semibold">demo-form</h2>
 
-	return (
-		<section className="mt-6 app-card">
-			<h2 className="text-sm font-semibold">demo-form</h2>
+      <p className="mt-2 text-sm muted">
+        Цель: увидеть в UI состояния errors, pending, disable, success state.
+      </p>
 
-			<p className="mt-2 text-sm muted">
-				Цель: увидеть в UI состояния errors, pending, disable, success state.
-			</p>
+      {formError ? (
+        <div className="mt-4 app-card app-card--soft">
+          <div className="font-semibold text-rose-700">Ошибка формы</div>
+          <p className="muted mt-1 text-sm">{formError}</p>
+        </div>
+      ) : null}
 
-			{formError ? (
-				<div className="mt-4 app-card app-card--soft">
-					<div className="font-semibold text-rose-700">Ошибка формы</div>
-					<p className="muted mt-1 text-sm">{formError}</p>
-				</div>
-			) : null}
+      <form onSubmit={onSubmit} className="mt-4 space-y-3">
+        <label className="block">
+          <div className="text-sm">Заголовок</div>
 
-			<form onSubmit={onSubmit} className="mt-4 space-y-3">
-				<label className="block">
-					<div className="text-sm">Заголовок</div>
+          <input
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            disabled={isPending}
+            className="app-input mt-1"
+            placeholder="Например: Первая заметка"
+            onBlur={() => setTouched(true)}
+          />
 
-					<input
-						value={title}
-						onChange={(e) => setTitle(e.target.value)}
-						onBlur={() => setTouched(true)}
-						disabled={isPending}
-						className="app-input mt-1"
-						placeholder="Например: Первая заметка"
-					/>
+          {fieldTitleError ? (
+            <div className="app-field-error text-rose-700">{fieldTitleError}</div>
+          ) : (
+            <div className="mt-1 text-sm muted">Максимум 60 символов.</div>
+          )}
+        </label>
 
-					{titleError ? (
-						<div className="app-field-error">{titleError}</div>
-					) : (
-						<div className="mt-1 text-sm muted">Максимум 60 символов.</div>
-					)}
-				</label>
+        <div className="flex flex-wrap items-center gap-2">
+          <button type="submit" disabled={isDisabled} className="app-btn app-btn-primary">
+            {isPending ? "Отправка..." : "Создать"}
+          </button>
 
-				<div className="flex flex-wrap items-center gap-2">
-					<button
-						type="submit"
-						disabled={isDisabled}
-						className="app-btn app-btn-primary"
-					>
-						{isPending ? 'Отправка...' : 'Создать'}
-					</button>
+          <button
+            type="button"
+            onClick={reset}
+            disabled={isPending}
+            className="app-btn app-btn-ghost"
+          >
+            Сбросить
+          </button>
+        </div>
 
-					<button
-						type="button"
-						onClick={reset}
-						disabled={isPending}
-						className="app-btn app-btn-ghost"
-					>
-						Сбросить
-					</button>
-				</div>
+        {/* ===== Сообщения состояния ===== */}
+        {state.kind === "success" ? (
+          <div className="app-card app-card--soft">
+            <div className="font-semibold text-emerald-700">Успешно</div>
+            <p className="muted mt-1 text-sm">{state.message}</p>
+          </div>
+        ) : null}
 
-				{/* ===== Сообщения состояния ===== */}
-				{state.kind === 'success' ? (
-					<div className="app-card app-card--soft">
-						<div className="font-semibold text-emerald-700">Успешно</div>
-						<p className="muted mt-1 text-sm">{state.message}</p>
-					</div>
-				) : null}
-
-				{state.kind === 'pending' ? (
-					<div className="app-card app-card--soft">
-						<div className="font-semibold">Отправка</div>
-						<p className="muted mt-1 text-sm">
-							Запрос выполняется. Кнопка заблокирована, повторный submit не
-							нужен.
-						</p>
-					</div>
-				) : null}
-			</form>
-		</section>
-	)
+        {state.kind === "pending" ? (
+          <div className="app-card app-card--soft">
+            <div className="font-semibold">Отправка</div>
+            <p className="muted mt-1 text-sm">
+              Запрос выполняется. Кнопка заблокирована, повторный submit не нужен.
+            </p>
+          </div>
+        ) : null}
+      </form>
+    </section>
+  );
 }

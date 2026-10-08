@@ -1,48 +1,71 @@
 // src/demo/notesStore.ts
 // Учебное хранилище заметок в памяти процесса.
-// Здесь важна не база данных, а типобезопасный доступ по DemoNoteId.
+// Подходит для демонстрации границ props/params/searchParams без подключения БД.
 
-// Фиксированная дата: мок-данные одинаковы между запусками и сборками.
-const SEED_DATE: IsoDateString = '2026-01-01T00:00:00.000Z'
+function nowIso(): IsoDateString {
+  return new Date().toISOString();
+}
 
-const notes: DemoNote[] = [
-	{
-		id: 'n1',
-		title: 'Первая заметка',
-		status: 'draft',
-		priority: 1,
-		tags: ['intro'],
-		description: '',
-		createdAt: SEED_DATE,
-		updatedAt: SEED_DATE,
-	},
-	{
-		id: 'n2',
-		title: 'TypeScript = ограничения',
-		status: 'published',
-		priority: 2,
-		tags: ['ts', 'contracts'],
-		description: '',
-		createdAt: SEED_DATE,
-		updatedAt: SEED_DATE,
-	},
-	{
-		id: 'n3',
-		title: 'Граница server/client',
-		status: 'published',
-		priority: 3,
-		tags: ['next', 'app-router'],
-		description: '',
-		createdAt: SEED_DATE,
-		updatedAt: SEED_DATE,
-	},
-]
+let notes: DemoNote[] = [
+  {
+    id: "n1",
+    title: "Первая заметка",
+    status: "draft",
+    tags: ["intro"],
+    createdAt: nowIso(),
+    updatedAt: nowIso(),
+    description: "",
+    priority: 2,
+  },
+  {
+    id: "n2",
+    title: "TypeScript = ограничения",
+    status: "published",
+    tags: ["ts", "contracts"],
+    createdAt: nowIso(),
+    updatedAt: nowIso(),
+    description: "Типы ограничивают невозможные состояния и убирают лишние проверки.",
+    priority: 1,
+  },
+  {
+    id: "n3",
+    title: "Граница server/client",
+    status: "published",
+    tags: ["next", "app-router"],
+    createdAt: nowIso(),
+    updatedAt: nowIso(),
+    description: "На границах особенно важны контракты: что приходит и что возвращается.",
+    priority: 1,
+  },
+];
 
 export function getNotes(): DemoNote[] {
-	// Возвращаем копию, чтобы внешняя логика не могла мутировать массив.
-	return [...notes]
+  return [...notes];
 }
 
 export function getNoteById(id: DemoNoteId): DemoNote | null {
-	return notes.find((n) => n.id === id) ?? null
+  return notes.find(n => n.id === id) ?? null;
+}
+
+export function createNote(input: DemoNoteCreateInput): DemoNote {
+  const id: DemoNoteId = `n${Date.now()}`;
+  const t = nowIso();
+
+  // Default values: превращаем неполный ввод в полную сущность.
+  const note: DemoNote = {
+    id,
+    title: input.title.trim(),
+
+    status: input.status ?? "draft",
+    priority: input.priority ?? 2,
+
+    tags: input.tags ?? ["new"],
+    description: input.description ?? "",
+
+    createdAt: t,
+    updatedAt: t,
+  };
+
+  notes = [note, ...notes];
+  return note;
 }

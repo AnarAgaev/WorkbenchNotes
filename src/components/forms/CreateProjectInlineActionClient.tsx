@@ -1,297 +1,134 @@
 // src/components/forms/CreateProjectInlineActionClient.tsx
-'use client'
+"use client";
 
-import {useRouter} from 'next/navigation'
-import {
-	useActionState,
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-	useTransition,
-} from 'react'
-
-import {createProjectFormInitialState} from '@/lib/formStates'
-import type {CreateProjectFormState} from '@/lib/formTypes'
-import {useWorkbenchStore} from '@/lib/workbenchStore'
-import {createProjectFromForm} from '@/server/actions/workbenchFormActions'
-import {saveProjectDraftAction} from '@/server/actions/workbenchProjectDraftActions'
-
-type DraftStatus = 'idle' | 'saving' | 'saved' | 'error'
-
-function Spinner() {
-	return (
-		<span className="inline-block h-3 w-3 animate-spin rounded-full border border-slate-400 border-t-transparent align-[-2px]" />
-	)
-}
-
-function DraftStatusBadge({
-	status,
-	updatedAt,
-}: {
-	status: DraftStatus
-	updatedAt: string | null
-}) {
-	if (status === 'idle')
-		return <span className="text-xs text-slate-500">idle</span>
-	if (status === 'saving')
-		return <span className="text-xs text-slate-300">saving…</span>
-	if (status === 'error')
-		return <span className="text-xs text-rose-300">error</span>
-	return (
-		<span className="text-xs text-slate-300">
-			saved{updatedAt ? ` • ${updatedAt}` : ''}
-		</span>
-	)
-}
+import { useActionState, useEffect, useMemo, useRef, useTransition } from "react";
+import { useWorkbenchStore } from "@/lib/workbenchStore";
+import { createProjectFromForm } from "@/server/actions/workbenchFormActions";
+import { createProjectFormInitialState } from "@/lib/formStates";
+import type { CreateProjectFormState } from "@/lib/formTypes";
 
 export default function CreateProjectInlineActionClient({
-	onCancel,
+  structure,
+  onCancel,
+  inputClassName = "",
 }: {
-	onCancel: () => void
+  structure: "entries" | "sections";
+  onCancel: () => void;
+  inputClassName?: string;
 }) {
-	const router = useRouter()
-	const store = useWorkbenchStore()
+  const store = useWorkbenchStore();
+  const formRef = useRef<HTMLFormElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
-	const [title, setTitle] = useState('')
-	const [structure, setStructure] = useState<Project['structure']>('entries')
+  // Защита от повторного submit через blur при переходе формы в pending.
+  const submitLockRef = useRef(false);
 
-	// clientId нужен и для optimistic-id, и для server id: p-${clientId}
-	const clientId = useMemo(() => crypto.randomUUID(), [])
-	const optimisticId = `p-${clientId}`
+  // clientId нужен, чтобы optimistic-id совпал с серверным id (p-${clientId})
+  const clientId = useMemo(() => crypto.randomUUID(), []);
+  const optimisticId = `p-${clientId}`;
 
-	// optimistic: делали ли вставку проекта при submit
-	const hadOptimisticInsertRef = useRef(false)
+  const [state, formAction, isPending] = useActionState<CreateProjectFormState, FormData>(
+    createProjectFromForm,
+    createProjectFormInitialState
+  );
 
-	// autosave черновика: requestId последнего запущенного сохранения
-	const activeDraftRequestIdRef = useRef<string | null>(null)
-	const draftTimerRef = useRef<number | null>(null)
+  const [, startTransition] = useTransition();
 
-	const [draftUpdatedAt, setDraftUpdatedAt] = useState<string | null>(null)
-	const [draftError, setDraftError] = useState<string | null>(null)
-	const [isDraftSaving, setIsDraftSaving] = useState(false)
+  useEffect(() => {
+    // После завершения action снова разрешаем submit.
+    if (!isPending) {
+      submitLockRef.current = false;
+    }
+  }, [isPending]);
 
-	const canDraftRun = useMemo(() => title.trim().length >= 2, [title])
+  useEffect(() => {
+    // UX: сразу фокусируем инпут
+    inputRef.current?.focus();
+    inputRef.current?.select();
+  }, []);
 
-	// derived status: не храним status отдельным useState
-	const draftStatus: DraftStatus = useMemo(() => {
-		if (!canDraftRun) return 'idle'
-		if (isDraftSaving) return 'saving'
-		if (draftError) return 'error'
-		if (draftUpdatedAt) return 'saved'
-		return 'idle'
-	}, [canDraftRun, isDraftSaving, draftError, draftUpdatedAt])
+  useEffect(() => {
+    // успех: просто закрываем инлайн (обновление списка уже optimistic)
+    if (state.ok) {
+      startTransition(() => onCancel());
+      return;
+    }
 
-	const [state, formAction, isPending] = useActionState<
-		CreateProjectFormState,
-		FormData
-	>(createProjectFromForm, createProjectFormInitialState)
+    // ошибка: откатываем optimistic-проект
+    if (state.ok === false && (state.error || state.fieldErrors?.title)) {
+      startTransition(() => store.removeProjectLocal(optimisticId));
+    }
+  }, [state, onCancel, startTransition, store, optimisticId]);
 
-	const [, startTransition] = useTransition()
+  return (
+    <form
+      ref={formRef}
+      action={formAction}
+      onSubmit={(e) => {
+        // Не допускаем второй submit от blur, пока уже идёт отправка.
+        if (submitLockRef.current) {
+          e.preventDefault();
+          return;
+        }
 
-	// autosave черновика: title/structure → debounce → server action → updatedAt
-	useEffect(() => {
-		if (draftTimerRef.current) window.clearTimeout(draftTimerRef.current)
+        // Блокируем сразу любой начавшийся submit,
+        // в том числе тот, который вернёт серверную validation error.
+        submitLockRef.current = true;
 
-		// черновик не сохраняем, если ещё нет валидного title
-		if (!canDraftRun) return
+        // optimistic insert до подтверждения сервера
+        const fd = new FormData(e.currentTarget);
+        const title = String(fd.get("title") ?? "").trim();
+        if (title.length < 2) return;
 
-		draftTimerRef.current = window.setTimeout(() => {
-			const requestId = crypto.randomUUID()
-			activeDraftRequestIdRef.current = requestId
+        startTransition(() => {
+          store.insertProjectLocal({
+            id: optimisticId,
+            title,
+            structure,
+            createdAt: new Date().toISOString(),
+            isDemo: false,
+          });
+        });
+      }}
+      className={`space-y-1 ${isPending ? "opacity-60" : ""}`}
+    >
+      <input type="hidden" name="clientId" value={clientId} />
+      <input type="hidden" name="structure" value={structure} />
 
-			setIsDraftSaving(true)
-			setDraftError(null)
+      <div className="relative">
+        <input
+          ref={inputRef}
+          name="title"
+          placeholder="Новый блокнот…"
+          disabled={isPending}
+          className={`${inputClassName} pr-9`}
+          onKeyDown={(e) => {
+            // Escape отменяет
+            if (e.key === "Escape") {
+              e.preventDefault();
+              onCancel();
+            }
+          }}
+          onBlur={() => {
+            // Enter уже мог запустить submit.
+            if (submitLockRef.current || isPending) return;
 
-			void saveProjectDraftAction({
-				clientId,
-				requestId,
-				title: title.trim(),
-				structure,
-			})
-				.then((r) => {
-					const rRequestId = r.ok ? r.value.requestId : r.requestId
+            // UX: blur = submit
+            formRef.current?.requestSubmit();
+          }}
+        />
 
-					// игнорируем ответы старых запросов
-					if (activeDraftRequestIdRef.current !== rRequestId) return
+        {isPending && (
+          <span
+            aria-label="Сохраняем…"
+            className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-transparent"
+          />
+        )}
+      </div>
 
-					if (!r.ok) {
-						setDraftError(r.error)
-						return
-					}
-
-					// updatedAt только после успеха
-					setDraftUpdatedAt(r.value.updatedAt)
-				})
-				.catch(() => {
-					if (activeDraftRequestIdRef.current !== requestId) return
-					setDraftError('Network error')
-				})
-				.finally(() => {
-					if (activeDraftRequestIdRef.current !== requestId) return
-					setIsDraftSaving(false)
-				})
-		}, 650)
-
-		return () => {
-			if (draftTimerRef.current) window.clearTimeout(draftTimerRef.current)
-		}
-	}, [title, structure, clientId, canDraftRun])
-
-	// обработка результата createProjectFromForm (optimistic create)
-	useEffect(() => {
-		if (state.ok) {
-			hadOptimisticInsertRef.current = false
-
-			const {projectId} = state.value
-
-			startTransition(() => {
-				router.push(`/p/${projectId}`)
-				onCancel()
-			})
-			return
-		}
-
-		if (
-			state.ok === false &&
-			(state.error || state.fieldErrors.title || state.fieldErrors.structure)
-		) {
-			if (!hadOptimisticInsertRef.current) return
-
-			hadOptimisticInsertRef.current = false
-
-			startTransition(() => {
-				// rollback optimistic create
-				store.deleteProject(optimisticId)
-			})
-		}
-	}, [state, router, onCancel, startTransition, store, optimisticId])
-
-	return (
-		<div className="app-card">
-			<form
-				action={formAction}
-				className="flex flex-col gap-3 sm:flex-row sm:items-end"
-				onSubmit={() => {
-					const t = title.trim()
-
-					// optimistic create делаем только при валидном вводе
-					if (t.length < 2) {
-						hadOptimisticInsertRef.current = false
-						return
-					}
-
-					hadOptimisticInsertRef.current = true
-
-					startTransition(() => {
-						store.insertProjectLocal({
-							id: optimisticId,
-							title: t,
-							structure,
-							createdAt: new Date().toISOString(),
-							isDemo: false,
-						})
-					})
-				}}
-			>
-				<input type="hidden" name="clientId" value={clientId} />
-				<input type="hidden" name="structure" value={structure} />
-
-				<div className="flex-1">
-					<div className="flex items-center justify-between mb-1">
-						<div className="wb-tree-meta">Название</div>
-						<DraftStatusBadge status={draftStatus} updatedAt={draftUpdatedAt} />
-					</div>
-
-					<input
-						name="title"
-						value={title}
-						onChange={(e) => {
-							setTitle(e.target.value)
-							// очищаем ошибку сразу при новом вводе, без эффектов
-							if (draftError) setDraftError(null)
-						}}
-						placeholder="Например: Мои заметки…"
-						className={`app-input w-full ${
-							state.ok === false && (state.fieldErrors.title || state.error)
-								? 'ring-1 ring-rose-500/60'
-								: ''
-						}`}
-						autoComplete="off"
-						disabled={isPending}
-						onKeyDown={(e) => {
-							if (e.key === 'Escape') {
-								e.preventDefault()
-								onCancel()
-							}
-						}}
-					/>
-
-					{canDraftRun && draftError ? (
-						<div className="mt-1 text-xs text-rose-300">
-							Черновик: {draftError}
-						</div>
-					) : null}
-
-					{state.ok === false && state.fieldErrors.title ? (
-						<div className="mt-1 text-xs text-rose-300">
-							{state.fieldErrors.title}
-						</div>
-					) : state.ok === false && state.error ? (
-						<div className="mt-1 text-xs text-rose-300">{state.error}</div>
-					) : (
-						<div className="mt-1 text-xs text-slate-500">
-							Подсказка: минимум 2 символа.
-						</div>
-					)}
-				</div>
-
-				<div className="sm:w-64">
-					<div className="wb-tree-meta mb-1">Тип проекта</div>
-
-					<select
-						className="app-input w-full"
-						value={structure}
-						onChange={(e) => {
-							setStructure(e.target.value as Project['structure'])
-							if (draftError) setDraftError(null)
-						}}
-						disabled={isPending}
-					>
-						<option value="entries">Заметки</option>
-						<option value="sections">Вложенные заметки</option>
-					</select>
-				</div>
-
-				<div className="flex gap-2 sm:w-56">
-					<button
-						type="submit"
-						className={`app-btn flex-1 ${isPending ? 'opacity-70' : ''}`}
-						disabled={title.trim().length === 0 || isPending}
-					>
-						{isPending ? (
-							<>
-								<Spinner /> <span className="ml-2">Создание…</span>
-							</>
-						) : (
-							'Создать'
-						)}
-					</button>
-
-					<button
-						type="button"
-						className="app-btn app-btn-ghost flex-1"
-						onClick={() => {
-							// отмена не должна оставлять “подвешенный” флаг optimistic
-							hadOptimisticInsertRef.current = false
-							onCancel()
-						}}
-						disabled={isPending}
-					>
-						Отмена
-					</button>
-				</div>
-			</form>
-		</div>
-	)
+      {state.ok === false && state.fieldErrors?.title && (
+        <div className="text-xs text-rose-300">{state.fieldErrors.title}</div>
+      )}
+    </form>
+  );
 }

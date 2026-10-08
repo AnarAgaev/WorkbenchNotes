@@ -1,32 +1,25 @@
 {
   "projects": [
     {
-      "id": "p-a38c3215-543d-49eb-aa09-03799c1d261e",
-      "title": "Мой блокнот",
-      "structure": "entries",
-      "createdAt": "2026-10-06T08:19:06.902Z",
-      "isDemo": false
-    },
-    {
-      "id": "p-a9e55c96-914d-4028-8d82-fd54ab482c0f",
-      "title": "Мои заметки",
-      "structure": "sections",
-      "createdAt": "2026-10-05T16:16:17.860Z",
-      "isDemo": false
-    },
-    {
       "id": "demo-notes",
       "title": "Заметки",
-      "createdAt": "2026-10-05T16:13:37.613Z",
+      "createdAt": "2026-02-26T14:08:56.675Z",
       "structure": "entries",
       "isDemo": true
     },
     {
       "id": "demo-nested",
       "title": "Вложенные заметки",
-      "createdAt": "2026-10-05T16:13:37.613Z",
+      "createdAt": "2026-02-26T14:08:56.675Z",
       "structure": "sections",
       "isDemo": true
+    },
+    {
+      "id": "p-af73a5be-e22a-4de1-91bc-20bd83508f64",
+      "title": "My new note",
+      "createdAt": "2026-10-08T08:50:03.411Z",
+      "structure": "entries",
+      "isDemo": false
     }
   ],
   "sections": [
@@ -57,7 +50,7 @@
       "parentId": "demo-notes",
       "title": "Добро пожаловать",
       "contentHtml": "<p>Это демо проекта <strong>2 уровня</strong>: проект → заметки.</p>",
-      "updatedAt": "2026-10-05T16:13:37.613Z"
+      "updatedAt": "2026-02-26T14:08:56.675Z"
     },
     {
       "id": "n-2",
@@ -66,7 +59,7 @@
       "parentId": "demo-notes",
       "title": "Идея",
       "contentHtml": "<p>Здесь будут быстрые заметки без вложенности.</p><ul><li>мысль</li><li>набросок</li></ul>",
-      "updatedAt": "2026-10-05T16:13:37.613Z"
+      "updatedAt": "2026-02-26T14:08:56.675Z"
     },
     {
       "id": "n-3",
@@ -75,7 +68,7 @@
       "parentId": "demo-notes",
       "title": "Чек-лист",
       "contentHtml": "<ol><li>Открыть</li><li>Редактировать</li><li>Сохранить (позже)</li></ol>",
-      "updatedAt": "2026-10-05T16:13:37.613Z"
+      "updatedAt": "2026-02-26T14:08:56.675Z"
     },
     {
       "id": "ni-1",
@@ -84,7 +77,7 @@
       "parentId": "s-ideas",
       "title": "Список идей",
       "contentHtml": "<p>В этом демо проекте <strong>3 уровня</strong>: проект → разделы → заметки.</p>",
-      "updatedAt": "2026-10-05T16:13:37.613Z"
+      "updatedAt": "2026-02-26T14:08:56.675Z"
     },
     {
       "id": "ni-2",
@@ -93,7 +86,7 @@
       "parentId": "s-ideas",
       "title": "Скетч функции",
       "contentHtml": "<p>Быстро набросать фичу:</p><pre><code>UI → State → Save</code></pre>",
-      "updatedAt": "2026-10-05T16:13:37.613Z"
+      "updatedAt": "2026-02-26T14:08:56.675Z"
     },
     {
       "id": "nd-1",
@@ -102,7 +95,7 @@
       "parentId": "s-drafts",
       "title": "Шаблон заметки",
       "contentHtml": "<h3>Шаблон</h3><p>Проблема → Решение → Шаги.</p>",
-      "updatedAt": "2026-10-05T16:13:37.613Z"
+      "updatedAt": "2026-02-26T14:08:56.675Z"
     },
     {
       "id": "nd-2",
@@ -111,7 +104,7 @@
       "parentId": "s-drafts",
       "title": "Черновик текста",
       "contentHtml": "<p>Набросок абзаца на русском. Потом отредактируем в Quill.</p>",
-      "updatedAt": "2026-10-05T16:13:37.613Z"
+      "updatedAt": "2026-02-26T14:08:56.675Z"
     },
     {
       "id": "np-1",
@@ -120,7 +113,7 @@
       "parentId": "s-plan",
       "title": "План недели",
       "contentHtml": "<ul><li>Понедельник — вход</li><li>Вторник — заметки</li><li>Среда — рефакторинг</li></ul>",
-      "updatedAt": "2026-10-05T16:13:37.613Z"
+      "updatedAt": "2026-02-26T14:08:56.675Z"
     },
     {
       "id": "np-2",
@@ -129,7 +122,16 @@
       "parentId": "s-plan",
       "title": "План курса",
       "contentHtml": "<p>Постепенно строим Workbench Notes (TS) и по дороге учим Next + TypeScript.</p>",
-      "updatedAt": "2026-10-05T16:13:37.613Z"
+      "updatedAt": "2026-02-26T14:08:56.675Z"
+    },
+    {
+      "id": "n-7caea61d-82e4-4e80-a825-9ee96491154f",
+      "projectId": "p-af73a5be-e22a-4de1-91bc-20bd83508f64",
+      "parentType": "project",
+      "parentId": "p-af73a5be-e22a-4de1-91bc-20bd83508f64",
+      "title": "My new text",
+      "contentHtml": "Hello workbanch",
+      "updatedAt": "2026-10-08T08:50:30.849Z"
     }
   ]
 }

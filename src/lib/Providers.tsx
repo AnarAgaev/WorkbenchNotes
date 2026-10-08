@@ -1,9 +1,9 @@
 // src/lib/Providers.tsx
-'use client'
+"use client";
 
-import type React from 'react'
-import {WorkbenchStoreProvider} from '@/lib/workbenchStore'
+import React from "react";
+import { WorkbenchStoreProvider } from "@/lib/workbenchStore";
 
-export default function Providers({children}: {children: React.ReactNode}) {
-	return <WorkbenchStoreProvider>{children}</WorkbenchStoreProvider>
+export default function Providers({ children }: { children: React.ReactNode }) {
+  return <WorkbenchStoreProvider>{children}</WorkbenchStoreProvider>;
 }

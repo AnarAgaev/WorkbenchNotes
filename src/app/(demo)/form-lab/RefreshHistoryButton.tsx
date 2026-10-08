@@ -1,18 +1,14 @@
 // src/app/(demo)/form-lab/RefreshHistoryButton.tsx
-'use client'
+"use client";
 
-import {useRouter} from 'next/navigation'
+import { useRouter } from "next/navigation";
 
 export default function RefreshHistoryButton() {
-	const router = useRouter()
+  const router = useRouter();
 
-	return (
-		<button
-			type="button"
-			className="app-btn app-btn-ghost"
-			onClick={() => router.refresh()}
-		>
-			Обновить список
-		</button>
-	)
+  return (
+    <button type="button" className="app-btn app-btn-ghost" onClick={() => router.refresh()}>
+      Обновить список
+    </button>
+  );
 }

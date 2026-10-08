@@ -1,47 +1,38 @@
 // src/@types/demo-notes.d.ts
-export {}
+export {};
 
 declare global {
-	// Все типы внутри declare global - глобальные и доступны без импорта во всей папке src/demo/.
+  // Семантические строки.
+  type IsoDateString = string;
+  type DemoNoteId = string;
 
-	// Семантическая строка: тип совпадает со string, но фиксирует смысл.
-	// DemoNoteId — это идентификатор заметки, а не произвольный текст.
-	//! DemoNoteId - это semantic alias
-	type DemoNoteId = string
+  // Union: ограниченный набор значений вместо произвольных строк.
+  type DemoNoteStatus = "draft" | "published" | "archived";
+  type DemoNotePriority = 1 | 2 | 3;
 
-	type IsoDateString = string
+  // Сущность демо: внутри проекта поля всегда определены.
+  // Это снижает количество защитного кода в UI.
+  type DemoNote = {
+    id: DemoNoteId;
+    title: string;
 
-	// Union: только три допустимых значения вместо произвольной строки.
-	type DemoNoteStatus = 'draft' | 'published' | 'archived'
+    status: DemoNoteStatus;
+    priority: DemoNotePriority;
 
-	// Union: только несколько доступных значений тегов вместо произвольной строки.
-	type DemoNoteTag = 'ts' | 'contracts' | 'next' | 'app-router' | 'intro'
+    tags: string[];
+    description: string;
 
-	// Сущность демо: внутри проекта поля всегда определены.
-	// Это снижает количество защитного кода в UI.
-	type DemoNote = {
-		id: DemoNoteId
-		title: string
+    createdAt: IsoDateString;
+    updatedAt: IsoDateString;
+  };
 
-		status: DemoNoteStatus
-		priority: DemoNotePriority
-
-		tags: DemoNoteTag[]
-		description: string
-
-		createdAt: IsoDateString
-		updatedAt: IsoDateString
-	}
-
-	type DemoNotePriority = 1 | 2 | 3
-
-	// Входной формат: на границе поля могут отсутствовать.
-	// Этот тип удобен для сборки сущности через дефолты.
-	type DemoNoteCreateInput = {
-		title: string
-		status?: DemoNoteStatus
-		priority?: DemoNotePriority
-		tags?: string[]
-		description?: string
-	}
+  // Входной формат: на границе поля могут отсутствовать.
+  // Этот тип удобен для сборки сущности через дефолты.
+  type DemoNoteCreateInput = {
+    title: string;
+    status?: DemoNoteStatus;
+    priority?: DemoNotePriority;
+    tags?: string[];
+    description?: string;
+  };
 }
