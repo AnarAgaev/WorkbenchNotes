@@ -15,10 +15,33 @@ import {createProjectFormInitialState} from '@/lib/formStates'
 import type {CreateProjectFormState} from '@/lib/formTypes'
 import {useWorkbenchStore} from '@/lib/workbenchStore'
 import {createProjectFromForm} from '@/server/actions/workbenchFormActions'
+import {saveProjectDraftAction} from '@/server/actions/workbenchProjectDraftActions'
+
+type DraftStatus = 'idle' | 'saving' | 'saved' | 'error'
 
 function Spinner() {
 	return (
 		<span className="inline-block h-3 w-3 animate-spin rounded-full border border-slate-400 border-t-transparent align-[-2px]" />
+	)
+}
+
+function DraftStatusBadge({
+	status,
+	updatedAt,
+}: {
+	status: DraftStatus
+	updatedAt: string | null
+}) {
+	if (status === 'idle')
+		return <span className="text-xs text-slate-500">idle</span>
+	if (status === 'saving')
+		return <span className="text-xs text-slate-300">saving…</span>
+	if (status === 'error')
+		return <span className="text-xs text-rose-300">error</span>
+	return (
+		<span className="text-xs text-slate-300">
+			saved{updatedAt ? ` • ${updatedAt}` : ''}
+		</span>
 	)
 }
 
@@ -33,13 +56,31 @@ export default function CreateProjectInlineActionClient({
 	const [title, setTitle] = useState('')
 	const [structure, setStructure] = useState<Project['structure']>('entries')
 
-	// clientId нужен, чтобы optimistic-id совпал с серверным id: p-${clientId}
+	// clientId нужен и для optimistic-id, и для server id: p-${clientId}
 	const clientId = useMemo(() => crypto.randomUUID(), [])
 	const optimisticId = `p-${clientId}`
 
-	// флаг: делали ли optimistic-вставку в текущем submit
-	// ref читается только в эффектах/хендлерах, не в render
+	// optimistic: делали ли вставку проекта при submit
 	const hadOptimisticInsertRef = useRef(false)
+
+	// autosave черновика: requestId последнего запущенного сохранения
+	const activeDraftRequestIdRef = useRef<string | null>(null)
+	const draftTimerRef = useRef<number | null>(null)
+
+	const [draftUpdatedAt, setDraftUpdatedAt] = useState<string | null>(null)
+	const [draftError, setDraftError] = useState<string | null>(null)
+	const [isDraftSaving, setIsDraftSaving] = useState(false)
+
+	const canDraftRun = useMemo(() => title.trim().length >= 2, [title])
+
+	// derived status: не храним status отдельным useState
+	const draftStatus: DraftStatus = useMemo(() => {
+		if (!canDraftRun) return 'idle'
+		if (isDraftSaving) return 'saving'
+		if (draftError) return 'error'
+		if (draftUpdatedAt) return 'saved'
+		return 'idle'
+	}, [canDraftRun, isDraftSaving, draftError, draftUpdatedAt])
 
 	const [state, formAction, isPending] = useActionState<
 		CreateProjectFormState,
@@ -48,22 +89,69 @@ export default function CreateProjectInlineActionClient({
 
 	const [, startTransition] = useTransition()
 
+	// autosave черновика: title/structure → debounce → server action → updatedAt
+	useEffect(() => {
+		if (draftTimerRef.current) window.clearTimeout(draftTimerRef.current)
+
+		// черновик не сохраняем, если ещё нет валидного title
+		if (!canDraftRun) return
+
+		draftTimerRef.current = window.setTimeout(() => {
+			const requestId = crypto.randomUUID()
+			activeDraftRequestIdRef.current = requestId
+
+			setIsDraftSaving(true)
+			setDraftError(null)
+
+			void saveProjectDraftAction({
+				clientId,
+				requestId,
+				title: title.trim(),
+				structure,
+			})
+				.then((r) => {
+					const rRequestId = r.ok ? r.value.requestId : r.requestId
+
+					// игнорируем ответы старых запросов
+					if (activeDraftRequestIdRef.current !== rRequestId) return
+
+					if (!r.ok) {
+						setDraftError(r.error)
+						return
+					}
+
+					// updatedAt только после успеха
+					setDraftUpdatedAt(r.value.updatedAt)
+				})
+				.catch(() => {
+					if (activeDraftRequestIdRef.current !== requestId) return
+					setDraftError('Network error')
+				})
+				.finally(() => {
+					if (activeDraftRequestIdRef.current !== requestId) return
+					setIsDraftSaving(false)
+				})
+		}, 650)
+
+		return () => {
+			if (draftTimerRef.current) window.clearTimeout(draftTimerRef.current)
+		}
+	}, [title, structure, clientId, canDraftRun])
+
+	// обработка результата createProjectFromForm (optimistic create)
 	useEffect(() => {
 		if (state.ok) {
-			// успех: проект уже есть в store (optimistic),
-			// остаётся перейти в workspace и закрыть инлайн
 			hadOptimisticInsertRef.current = false
 
 			const {projectId} = state.value
+
 			startTransition(() => {
 				router.push(`/p/${projectId}`)
 				onCancel()
 			})
-
 			return
 		}
 
-		// ошибка: откатываем optimistic-проект, если он был вставлен
 		if (
 			state.ok === false &&
 			(state.error || state.fieldErrors.title || state.fieldErrors.structure)
@@ -73,8 +161,7 @@ export default function CreateProjectInlineActionClient({
 			hadOptimisticInsertRef.current = false
 
 			startTransition(() => {
-				// rollback локального optimistic-результата
-				// deleteProject удалит проект и связанные данные из in-memory db
+				// rollback optimistic create
 				store.deleteProject(optimisticId)
 			})
 		}
@@ -88,8 +175,7 @@ export default function CreateProjectInlineActionClient({
 				onSubmit={() => {
 					const t = title.trim()
 
-					// optimistic делаем только при валидном вводе,
-					// иначе пусть сервер вернёт fieldErrors без локальных вставок
+					// optimistic create делаем только при валидном вводе
 					if (t.length < 2) {
 						hadOptimisticInsertRef.current = false
 						return
@@ -112,12 +198,19 @@ export default function CreateProjectInlineActionClient({
 				<input type="hidden" name="structure" value={structure} />
 
 				<div className="flex-1">
-					<div className="wb-tree-meta mb-1">Название</div>
+					<div className="flex items-center justify-between mb-1">
+						<div className="wb-tree-meta">Название</div>
+						<DraftStatusBadge status={draftStatus} updatedAt={draftUpdatedAt} />
+					</div>
 
 					<input
 						name="title"
 						value={title}
-						onChange={(e) => setTitle(e.target.value)}
+						onChange={(e) => {
+							setTitle(e.target.value)
+							// очищаем ошибку сразу при новом вводе, без эффектов
+							if (draftError) setDraftError(null)
+						}}
 						placeholder="Например: Мои заметки…"
 						className={`app-input w-full ${
 							state.ok === false && (state.fieldErrors.title || state.error)
@@ -133,6 +226,12 @@ export default function CreateProjectInlineActionClient({
 							}
 						}}
 					/>
+
+					{canDraftRun && draftError ? (
+						<div className="mt-1 text-xs text-rose-300">
+							Черновик: {draftError}
+						</div>
+					) : null}
 
 					{state.ok === false && state.fieldErrors.title ? (
 						<div className="mt-1 text-xs text-rose-300">
@@ -153,9 +252,10 @@ export default function CreateProjectInlineActionClient({
 					<select
 						className="app-input w-full"
 						value={structure}
-						onChange={(e) =>
+						onChange={(e) => {
 							setStructure(e.target.value as Project['structure'])
-						}
+							if (draftError) setDraftError(null)
+						}}
 						disabled={isPending}
 					>
 						<option value="entries">Заметки</option>
@@ -181,7 +281,11 @@ export default function CreateProjectInlineActionClient({
 					<button
 						type="button"
 						className="app-btn app-btn-ghost flex-1"
-						onClick={onCancel}
+						onClick={() => {
+							// отмена не должна оставлять “подвешенный” флаг optimistic
+							hadOptimisticInsertRef.current = false
+							onCancel()
+						}}
 						disabled={isPending}
 					>
 						Отмена

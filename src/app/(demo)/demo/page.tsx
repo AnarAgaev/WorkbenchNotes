@@ -71,6 +71,11 @@ const modules: DemoModule[] = [
 				title: 'optimistic-lab',
 				desc: 'optimistic + rollback (clientId)',
 			},
+			{
+				href: '/autosave-lab',
+				title: 'autosave-lab',
+				desc: 'debounce → action, статусы saving/saved/error',
+			},
 		],
 	},
 ]
