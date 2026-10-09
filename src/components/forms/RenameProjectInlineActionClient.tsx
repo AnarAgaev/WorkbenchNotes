@@ -2,6 +2,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { renameProjectFromForm } from "@/server/actions/workbenchFormActions";
 import { renameProjectFormInitialState } from "@/lib/formStates";
 import type { RenameProjectFormState } from "@/lib/formTypes";
@@ -22,6 +23,7 @@ export default function RenameProjectInlineActionClient({
   className?: string;
   inputClassName?: string;
 }) {
+  const router = useRouter();
   const store = useWorkbenchStore();
 
   const formRef = useRef<HTMLFormElement | null>(null);
@@ -55,6 +57,9 @@ export default function RenameProjectInlineActionClient({
 
     // затем отправляем форму на серверную action
     formRef.current?.requestSubmit();
+
+    // обновляем server snapshot сразу после сабмита rename
+    router.refresh();
 
     // и закрываем режим редактирования
     onCancel();

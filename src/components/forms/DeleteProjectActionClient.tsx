@@ -2,6 +2,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { deleteProjectFromForm } from "@/server/actions/workbenchFormActions";
 import { deleteProjectFormInitialState } from "@/lib/formStates";
 import type { DeleteProjectFormState } from "@/lib/formTypes";
@@ -22,6 +23,7 @@ export default function DeleteProjectActionClient({
   className?: string;
   title?: string;
 }) {
+  const router = useRouter();
   const store = useWorkbenchStore();
   const didConfirmRef = useRef(false);
 
@@ -57,6 +59,7 @@ export default function DeleteProjectActionClient({
         startTransition(() => {
           store.removeProjectLocal(projectId);
           onDeleted();
+          router.refresh();
         });
       }}
     >

@@ -1,6 +1,8 @@
 // src/server/actions/workbenchFormActions.ts
 "use server";
 
+import { revalidatePath } from "next/cache";
+
 import { readWorkbenchDb, writeWorkbenchDb } from "@/server/workbenchDb";
 import { createNoteSchema, createSectionSchema, editTitleSchema, titleSchema } from "@/lib/schemas";
 import type {
@@ -57,6 +59,9 @@ export async function createProjectFromForm(
     await writeWorkbenchDb(db);
   }
 
+  // маршруты в ISR, после мутации инвалидируем server snapshot и server-projects
+  revalidatePath("/");
+  revalidatePath("/server-projects");
   return { ok: true, projectId, clientId };
 }
 
@@ -187,6 +192,9 @@ export async function renameProjectFromForm(
   p.title = parsed.data.title;
   await writeWorkbenchDb(db);
 
+  // сбрасываем server snapshot главной и server-projects
+  revalidatePath("/");
+  revalidatePath("/server-projects");
   return { ok: true, projectId, clientId: projectId };
 }
 
@@ -283,6 +291,9 @@ export async function deleteProjectFromForm(
     await writeWorkbenchDb(db);
   }
 
+  // сбрасываем server snapshot главной и server-projects
+  revalidatePath("/");
+  revalidatePath("/server-projects");
   return { ok: true, projectId };
 }
 

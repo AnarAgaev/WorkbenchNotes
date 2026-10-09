@@ -84,6 +84,17 @@ const groups: DemoGroup[] = [
       },
     ],
   },
+  {
+    title: "Модуль 5 — Кэш, перевалидация, ISR-логика",
+    desc: "server snapshot, revalidatePath, revalidateTag, route config",
+    items: [
+      {
+        href: "/server-projects",
+        title: "server-projects",
+        desc: "server snapshot списка проектов (RSC/ISR)",
+      },
+    ],
+  },
 ];
 
 export const metadata = { title: "Demo" };

@@ -1,6 +1,8 @@
 // src/app/_actions/mutations.ts
 "use server";
 
+import { revalidatePath } from "next/cache";
+
 import {
   CreateNotePayloadSchema,
   CreateProjectPayloadSchema,
@@ -52,11 +54,19 @@ export async function createProjectAction(payload: unknown): Promise<Result> {
 
   const { project } = parsed.data;
 
-  return mutateDb((db) => {
+  const res = await mutateDb((db) => {
     // Защита от дубля: операция идемпотентна по id.
     if (db.projects.some((p) => p.id === project.id)) return;
     db.projects.push(project);
   });
+
+  if (res.ok) {
+    // Модуль 5: инвалидируем server snapshot главной и server-projects
+    revalidatePath("/");
+    revalidatePath("/server-projects");
+  }
+
+  return res;
 }
 
 export async function renameProjectAction(payload: unknown): Promise<Result> {
@@ -65,7 +75,7 @@ export async function renameProjectAction(payload: unknown): Promise<Result> {
 
   const { projectId, title } = parsed.data;
 
-  return mutateDb((db) => {
+  const res = await mutateDb((db) => {
     const p = db.projects.find((x) => x.id === projectId);
     if (!p) return;
 
@@ -74,6 +84,13 @@ export async function renameProjectAction(payload: unknown): Promise<Result> {
 
     p.title = title;
   });
+
+  if (res.ok) {
+    revalidatePath("/");
+    revalidatePath("/server-projects");
+  }
+
+  return res;
 }
 
 export async function deleteProjectAction(payload: unknown): Promise<Result> {
@@ -82,7 +99,7 @@ export async function deleteProjectAction(payload: unknown): Promise<Result> {
 
   const { projectId } = parsed.data;
 
-  return mutateDb((db) => {
+  const res = await mutateDb((db) => {
     const p = db.projects.find((x) => x.id === projectId);
     if (!p) return;
 
@@ -94,6 +111,13 @@ export async function deleteProjectAction(payload: unknown): Promise<Result> {
     db.sections = db.sections.filter((s) => s.projectId !== projectId);
     db.notes = db.notes.filter((n) => n.projectId !== projectId);
   });
+
+  if (res.ok) {
+    revalidatePath("/");
+    revalidatePath("/server-projects");
+  }
+
+  return res;
 }
 
 /* =========================

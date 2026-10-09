@@ -2,6 +2,7 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useRef, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { useWorkbenchStore } from "@/lib/workbenchStore";
 import { createProjectFromForm } from "@/server/actions/workbenchFormActions";
 import { createProjectFormInitialState } from "@/lib/formStates";
@@ -16,6 +17,7 @@ export default function CreateProjectInlineActionClient({
   onCancel: () => void;
   inputClassName?: string;
 }) {
+  const router = useRouter();
   const store = useWorkbenchStore();
   const formRef = useRef<HTMLFormElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -48,9 +50,12 @@ export default function CreateProjectInlineActionClient({
   }, []);
 
   useEffect(() => {
-    // успех: просто закрываем инлайн (обновление списка уже optimistic)
+    // успех: закрываем инлайн + обновляем server snapshot (module 5)
     if (state.ok) {
-      startTransition(() => onCancel());
+      startTransition(() => {
+        onCancel();
+        router.refresh();
+      });
       return;
     }
 
@@ -58,7 +63,7 @@ export default function CreateProjectInlineActionClient({
     if (state.ok === false && (state.error || state.fieldErrors?.title)) {
       startTransition(() => store.removeProjectLocal(optimisticId));
     }
-  }, [state, onCancel, startTransition, store, optimisticId]);
+  }, [state, onCancel, startTransition, store, optimisticId, router]);
 
   return (
     <form
