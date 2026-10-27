@@ -93,6 +93,21 @@ const groups: DemoGroup[] = [
         title: "server-projects",
         desc: "server snapshot списка проектов (RSC/ISR)",
       },
+      {
+        href: "/cache-lab/revalidate-tag",
+        title: "cache-lab/revalidate-tag",
+        desc: "unstable_cache + tagged cache",
+      },
+      {
+        href: "/cache-lab/route-config",
+        title: "cache-lab/route-config",
+        desc: "ISR vs force-dynamic vs fetch no-store.",
+      },
+      {
+        href: "/state-lab",
+        title: "state-lab",
+        desc: "local vs URL vs store, derived state",
+      },
     ],
   },
 ];
