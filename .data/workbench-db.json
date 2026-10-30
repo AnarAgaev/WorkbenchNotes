@@ -27,6 +27,13 @@
       "createdAt": "2026-10-09T08:52:22.508Z",
       "structure": "entries",
       "isDemo": false
+    },
+    {
+      "id": "p-794e184c-9827-40eb-8c8e-7a7f0ed2961d",
+      "title": "HTML зметки",
+      "createdAt": "2026-10-30T05:44:26.833Z",
+      "structure": "entries",
+      "isDemo": false
     }
   ],
   "sections": [
@@ -56,8 +63,8 @@
       "parentType": "project",
       "parentId": "demo-notes",
       "title": "Добро пожаловать",
-      "contentHtml": "<p>Это демо проекта <strong>2 уровня</strong>: проект → заметки.</p>",
-      "updatedAt": "2026-02-26T14:08:56.675Z"
+      "contentHtml": "<p><strong style=\"color: rgb(230, 0, 0);\"><em><u>Какой-то&nbsp;текст&nbsp;будет&nbsp;здесь,&nbsp;но&nbsp;почемуто&nbsp;он&nbsp;очфывафывафы</u></em></strong></p>",
+      "updatedAt": "2026-10-29T09:43:30.875Z"
     },
     {
       "id": "n-2",
@@ -139,6 +146,15 @@
       "title": "My new text",
       "contentHtml": "Hello workbanch",
       "updatedAt": "2026-10-08T08:50:30.849Z"
+    },
+    {
+      "id": "n-3b4c6698-6b7e-4f1c-9934-3524681adc96",
+      "projectId": "p-794e184c-9827-40eb-8c8e-7a7f0ed2961d",
+      "parentType": "project",
+      "parentId": "p-794e184c-9827-40eb-8c8e-7a7f0ed2961d",
+      "title": "HTML заметка",
+      "contentHtml": "<ol><li>один</li><li>два</li><li>три</li></ol><p></p><pre data-language=\"plain\">\n{\n  &quot;id&quot;: 1\n  &quot;status&quot;: &quot;admin\n}\n</pre>",
+      "updatedAt": "2026-10-30T05:45:38.365Z"
     }
   ]
 }

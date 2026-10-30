@@ -456,3 +456,169 @@ a {
 .app-card--demo {
   border-color: rgba(16, 185, 129, 0.55) !important;
 }
+
+/* =========================================================
+   globals.css — Block 6: Quill
+========================================================= */
+/* ReactQuill wrapper */
+.wb-editor .quill {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.wb-editor .ql-toolbar.ql-snow {
+  background: #fff;
+  border: 0;
+  border-bottom: 1px solid rgba(203, 213, 225, 1);
+}
+
+.wb-editor .ql-container.ql-snow {
+  border: 0;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.wb-editor .ql-editor {
+  padding: 14px;
+  color: #0f172a;
+  background: #fff;
+}
+.wb-editor .ql-snow .ql-stroke {
+  stroke: #0f172a;
+}
+.wb-editor .ql-snow .ql-fill {
+  fill: #0f172a;
+  background: #fff;
+}
+.wb-editor .ql-snow .ql-picker {
+  color: #0f172a;
+}
+.wb-editor .ql-snow.ql-toolbar button:hover,
+.wb-editor .ql-snow.ql-toolbar button.ql-active {
+  background: rgba(226, 232, 240, 1);
+}
+
+/* Quill toolbar: icons for undo/redo (dark) */
+.wb-editor .ql-toolbar button.ql-undo,
+.wb-editor .ql-toolbar button.ql-redo {
+  color: #0f172a;
+  opacity: 1;
+}
+
+.wb-editor .ql-toolbar .ql-undo::before,
+.wb-editor .ql-toolbar .ql-redo::before {
+  color: #0f172a;
+  font-size: 16px;
+  opacity: 1;
+}
+
+.wb-editor .ql-toolbar .ql-undo::before { content: "↶"; }
+.wb-editor .ql-toolbar .ql-redo::before { content: "↷"; }
+
+
+/* Clamp Quill tooltip inside editor WITHOUT horizontal overflow */
+.wb-editor {
+  overflow-x: clip; /* важнее, чем hidden: не создаёт горизонтальный скролл */
+  min-width: 0;
+}
+
+.wb-editor .ql-container {
+  overflow: hidden;
+  min-width: 0;
+}
+
+.wb-editor .ql-tooltip {
+  left: 12px !important;
+  width: min(520px, calc(100% - 24px)) !important;
+  max-width: none !important;
+  box-sizing: border-box;
+}
+
+.wb-editor .ql-tooltip input[type="text"] {
+  width: 100% !important;
+  box-sizing: border-box;
+}
+
+/* ===== Viewer (Quill-like) ===== */
+.wb-viewer .ql-editor {
+  height: 100%;
+  overflow-y: auto;
+  padding: 14px;
+
+  overflow-x: hidden;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  min-width: 0;
+}
+
+/* Ссылки — явно видимые */
+.wb-viewer .ql-editor a {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+/* Код не раздувает ширину */
+.wb-viewer .ql-editor pre {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* Форсим “нормальные” маркеры списков в режиме просмотра */
+/* ===== Viewer lists: nicer spacing ===== */
+.wb-viewer .ql-editor ul,
+.wb-viewer .ql-editor ol {
+  padding-left: 1.1rem !important;
+  margin: 0.5rem  !important;
+
+  list-style-position: inside;
+}
+
+.wb-viewer .ql-editor li {
+  display: list-item !important;
+}
+
+.wb-viewer .ql-editor ul > li {
+  list-style: disc;
+}
+
+.wb-viewer .ql-editor ol > li {
+  list-style: decimal;
+}
+
+.wb-viewer .ql-editor li::before {
+  content: none !important;
+}
+
+/* ===== Viewer hard-fix: dark text on white background ===== */
+.wb-viewer {
+  background: #fff !important;
+}
+
+/* базовый цвет текста в viewer, НЕ трогаем все дочерние элементы */
+.wb-viewer .ql-editor {
+  color: #0f172a;
+  background: #fff;
+}
+
+/* ссылки — всё равно выделяем отдельно */
+.wb-viewer a {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+/* viewer code blocks */
+.wb-viewer pre.hljs {
+  background: #0b1220;
+  border-radius: 10px;
+  padding: 12px;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.wb-viewer pre.hljs code.hljs {
+  background: transparent;
+  padding: 0;
+}

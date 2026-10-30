@@ -239,7 +239,7 @@ export function WorkbenchStoreProvider({ children }: { children: React.ReactNode
         parentType,
         parentId,
         title,
-        contentHtml: "",
+        contentHtml: "<p><br></p>",
         updatedAt: now,
       };
 

@@ -236,13 +236,19 @@ export async function updateNoteContentAction(payload: unknown): Promise<Result>
   if (!parsed.success) return { ok: false, error: parsed.error.message };
 
   const { noteId, contentHtml, updatedAt } = parsed.data;
+  let projectId: string | null = null;
 
-  return mutateDb((db) => {
+  const res = await mutateDb((db) => {
     const n = db.notes.find((x) => x.id === noteId);
     if (!n) return;
+
+    projectId = n.projectId;
 
     // Контент сохраняем “как есть”, а updatedAt приходит от клиента после debounce.
     n.contentHtml = contentHtml;
     n.updatedAt = updatedAt;
   });
+
+  if (res.ok && projectId) revalidatePath(`/p/${projectId}`);
+  return res;
 }

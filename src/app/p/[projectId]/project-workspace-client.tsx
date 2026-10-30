@@ -3,24 +3,15 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import hljs from "highlight.js";
 import Button from "@/components/ui/Button";
 import WorkspaceShell from "@/app/_ui/WorkspaceShell";
 import ProjectTreeClient from "@/app/_ui/ProjectTreeClient";
 import NoteEditorClient from "@/components/editor/NoteEditorClient";
 import { useWorkbenchStore } from "@/lib/workbenchStore";
 import { useUIShell } from "@/app/_ui/ui-shell-context";
-
-function htmlToPlain(html: string) {
-  // Демо-данные уже содержат HTML (позже это станет форматом Quill).
-  // В модуле State держим UI простым: редактируем и показываем plain text.
-  return html
-    .replace(/<\/(p|div|li|h\d)>/g, "\n")
-    .replace(/<br\s*\/?>/g, "\n")
-    .replace(/<[^>]+>/g, "")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-}
+import { prepareHtmlForPreview } from "@/lib/quillPreview";
 
 export default function ProjectWorkspaceClient({ projectId }: { projectId: Id }) {
   const sp = useSearchParams();
@@ -33,6 +24,24 @@ export default function ProjectWorkspaceClient({ projectId }: { projectId: Id })
   // UI state оболочки workspace приходит из Context.
   const ui = useUIShell();
   const { focusMode } = ui.state;
+
+  // note и previewHtml считаем до раннего return: useMemo — хук, его нельзя вызывать условно.
+  const note = noteId ? getNote(projectId, noteId) : undefined;
+
+  const previewHtml = useMemo(() => {
+    if (!note) return "";
+    return prepareHtmlForPreview(note.contentHtml || "");
+  }, [note]);
+
+  useEffect(() => {
+    if (mode !== "view") return;
+
+    // Подсветка запускается после рендера HTML.
+    // Ищем все code.hljs, которые подготовлены функцией prepareHtmlForPreview.
+    document.querySelectorAll("pre.hljs code.hljs").forEach((el) => {
+      hljs.highlightElement(el as HTMLElement);
+    });
+  }, [mode, previewHtml]);
 
   // Проект читается из client-store. Сервер его не проверяет.
   const project = getProject(projectId);
@@ -51,10 +60,10 @@ export default function ProjectWorkspaceClient({ projectId }: { projectId: Id })
     );
   }
 
-  const note = noteId ? getNote(projectId, noteId) : undefined;
   const saveInfo = note ? getNoteSaveInfo(note.id) : { status: "idle" as const };
 
-  const plain = note ? htmlToPlain(note.contentHtml || "") : "";
+  // value для WYSIWYG должен быть HTML, а не plain
+  const html = note ? note.contentHtml || "" : "";
 
   return (
     <section className="app-section pb-0 flex-1 min-h-0">
@@ -104,12 +113,12 @@ export default function ProjectWorkspaceClient({ projectId }: { projectId: Id })
                 {mode === "edit" ? (
                   <NoteEditorClient
                     key={note.id}
-                    value={plain} // в модуле State редактируем plain text
+                    value={html}
                     onChange={(next) => updateNoteContent(note.id, next)} // запись только при редактировании
                   />
                 ) : (
-                  <div key={note.id} className="wb-viewer">
-                    <pre className="wb-viewer__pre">{plain || ""}</pre>
+                  <div key={note.id} className="wb-viewer ql-snow">
+                    <div className="ql-editor" dangerouslySetInnerHTML={{ __html: previewHtml }} />
                   </div>
                 )}
               </div>

@@ -150,7 +150,7 @@ export async function createNoteFromForm(
       parentType: parentType as "project" | "section",
       parentId,
       title: parsed.data.title,
-      contentHtml: "",
+      contentHtml: "<p><br></p>",
       updatedAt: now,
     });
 
