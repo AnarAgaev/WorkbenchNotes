@@ -1,7 +1,7 @@
 // src/app/_ui/UIShellRootClient.tsx
 'use client'
 
-import {UIShellProvider} from '@/app/_ui/ui-shell-context'
+import {UIShellProvider} from '@/features/uiShell'
 
 export default function UIShellRootClient({
 	children,

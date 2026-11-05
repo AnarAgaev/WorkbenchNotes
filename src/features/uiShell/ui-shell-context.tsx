@@ -1,4 +1,4 @@
-// src/app/_ui/ui-shell-context.tsx
+// src/features/uiShell/ui-shell-context.tsx
 'use client'
 
 import {createContext, useContext, useEffect, useMemo, useState} from 'react'
@@ -28,7 +28,9 @@ function safeParseState(raw: string | null): UIShellState | null {
 		if (typeof obj !== 'object' || obj === null) return null
 
 		const focusMode =
-			typeof obj.focusMode === 'boolean' ? obj.focusMode : defaultState.focusMode
+			typeof obj.focusMode === 'boolean'
+				? obj.focusMode
+				: defaultState.focusMode
 
 		return {focusMode}
 	} catch {
@@ -37,13 +39,11 @@ function safeParseState(raw: string | null): UIShellState | null {
 }
 
 export function UIShellProvider({children}: {children: React.ReactNode}) {
-	// гидратация из localStorage сразу в initializer (без setState в effect)
 	const [state, setState] = useState<UIShellState>(() => {
 		if (typeof window === 'undefined') return defaultState
 		return safeParseState(window.localStorage.getItem(LS_KEY)) ?? defaultState
 	})
 
-	// persist
 	useEffect(() => {
 		window.localStorage.setItem(LS_KEY, JSON.stringify(state))
 	}, [state])
@@ -52,8 +52,7 @@ export function UIShellProvider({children}: {children: React.ReactNode}) {
 		return {
 			state,
 			setFocusMode: (v) => setState((s) => ({...s, focusMode: v})),
-			toggleFocusMode: () =>
-				setState((s) => ({...s, focusMode: !s.focusMode})),
+			toggleFocusMode: () => setState((s) => ({...s, focusMode: !s.focusMode})),
 		}
 	}, [state])
 
